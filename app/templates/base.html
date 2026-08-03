@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meika — AI Financial Copilot</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        washi: '#FBFBF7',      /* Primary Zen Paper Beige */
+                        sumi: '#2F2F2F',       /* Ink Grey Text */
+                        matcha: '#889A7B',     /* Muted Green Accent */
+                        'matcha-dark': '#6E8062',
+                        'matcha-light': '#E9EFE6',
+                        'sand-border': '#E4E4D8',
+                        'card-bg': '#FFFFFF'
+                    },
+                    fontFamily: {
+                        sans: ['Figtree', 'Inter', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-washi text-sumi font-sans min-h-screen flex flex-col justify-between antialiased selection:bg-matcha-light selection:text-sumi">
+
+    <!-- Top Navigation Header -->
+    <header class="border-b border-sand-border bg-washi/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <!-- Brand & Ensō Logo -->
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-full border-2 border-sumi border-r-transparent flex items-center justify-center relative transition-transform group-hover:rotate-12">
+                    <div class="w-2.5 h-2.5 bg-matcha rounded-full"></div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-sumi">Meika</h1>
+                    <p class="text-xs text-stone-500 font-medium">Spend Savvy. Live Fully.</p>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="flex items-center gap-1 sm:gap-2 bg-sand-border/40 p-1.5 rounded-2xl text-sm font-medium">
+                <a href="/" class="px-4 py-2 rounded-xl transition-colors {% if page == 'dashboard' %}bg-white text-sumi shadow-sm font-semibold{% else %}text-stone-600 hover:text-sumi hover:bg-white/50{% endif %}">
+                    Dashboard
+                </a>
+                <a href="/price-finder" class="px-4 py-2 rounded-xl transition-colors {% if page == 'price_finder' %}bg-white text-sumi shadow-sm font-semibold{% else %}text-stone-600 hover:text-sumi hover:bg-white/50{% endif %}">
+                    AI Price-Finder
+                </a>
+                <a href="/expenses" class="px-4 py-2 rounded-xl transition-colors {% if page == 'expenses' %}bg-white text-sumi shadow-sm font-semibold{% else %}text-stone-600 hover:text-sumi hover:bg-white/50{% endif %}">
+                    Expenses & Budget
+                </a>
+                <a href="/copilot" class="px-4 py-2 rounded-xl transition-colors {% if page == 'copilot' %}bg-white text-sumi shadow-sm font-semibold{% else %}text-stone-600 hover:text-sumi hover:bg-white/50{% endif %}">
+                    XAI Copilot
+                </a>
+            </nav>
+
+            <!-- Location Badge -->
+            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-matcha-light text-matcha-dark text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-matcha animate-pulse"></span>
+                Kwangwoon Univ, Seoul
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-sand-border py-6 text-center text-xs text-stone-500">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2026 Meika Financial Copilot — Zen Minimalist Financial Clarity for International Students.</p>
+            <p class="text-stone-400">Phase 1 MVP Local Workspace Edition</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

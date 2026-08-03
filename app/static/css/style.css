@@ -1,0 +1,23 @@
+/* Additional Custom Zen Aesthetics */
+body {
+    background-color: #FBFBF7;
+    color: #2F2F2F;
+}
+
+.card-zen {
+    background-color: #FFFFFF;
+    border: 1px solid #E4E4D8;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.btn-matcha {
+    background-color: #889A7B;
+    color: #FFFFFF;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-matcha:hover {
+    background-color: #6E8062;
+}
