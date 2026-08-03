@@ -4,7 +4,15 @@
       "mcp__claude_ai_Google_Drive__search_files",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git config *)",
+      "Bash(where flutter *)",
+      "Bash(where docker *)",
+      "Bash(where python *)",
+      "Bash(git rm *)",
+      "Bash(python -m venv .venv)",
+      "Bash(./.venv/Scripts/python.exe -m pip install -q -r requirements-dev.txt)",
+      "Bash(./.venv/Scripts/python.exe -m pytest -v)"
     ]
   }
 }

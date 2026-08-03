@@ -1,3 +1,4 @@
+# --- Python / backend ---
 __pycache__/
 *.py[cod]
 *$py.class
@@ -5,6 +6,24 @@ __pycache__/
 venv/
 ENV/
 env/
+.pytest_cache/
+*.egg-info/
+
+# --- Flutter / frontend ---
+frontend/.dart_tool/
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/.pub/
+
+# --- Secrets & local data ---
 .env
+backend/.env
 meika.db
+*.db
+
+# --- IDE / OS ---
 .idea/workspace.xml
+.DS_Store
+Thumbs.db

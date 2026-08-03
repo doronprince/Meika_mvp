@@ -1,1 +1,0 @@
-# Meika MVP Application Package
