@@ -12,7 +12,11 @@
       "Bash(git rm *)",
       "Bash(python -m venv .venv)",
       "Bash(./.venv/Scripts/python.exe -m pip install -q -r requirements-dev.txt)",
-      "Bash(./.venv/Scripts/python.exe -m pytest -v)"
+      "Bash(./.venv/Scripts/python.exe -m pytest -v)",
+      "Bash(./.venv/Scripts/python.exe -m pip install -q alembic)",
+      "Bash(./.venv/Scripts/python.exe \"C:/Users/doron/AppData/Local/Temp/claude/D--Doron-Meika-mvp/c9866bd3-25d1-4a2f-8bba-0df397a614d3/scratchpad/verify_schema.py\")",
+      "Bash(./.venv/Scripts/python.exe -m alembic history)",
+      "Bash(./.venv/Scripts/python.exe -m alembic heads)"
     ]
   }
 }
