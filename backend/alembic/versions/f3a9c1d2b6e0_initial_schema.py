@@ -33,8 +33,6 @@ CHAT_ROLE_VALUES = ("user", "assistant")
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-
     # Postgres ENUM types are created once, explicitly, then referenced with
     # create_type=False on every column that uses them — otherwise the second
     # create_table referencing the same type fails with "type already exists".
@@ -43,10 +41,15 @@ def upgrade() -> None:
     store_type = postgresql.ENUM(*STORE_TYPE_VALUES, name="store_type")
     chat_role = postgresql.ENUM(*CHAT_ROLE_VALUES, name="chat_role")
 
-    expense_category.create(bind, checkfirst=True)
-    transit_mode.create(bind, checkfirst=True)
-    store_type.create(bind, checkfirst=True)
-    chat_role.create(bind, checkfirst=True)
+    # checkfirst=True issues a real information_schema query, which only
+    # works against a live connection. `alembic upgrade --sql head` (offline
+    # mode) has no connection to query, so it emits the CREATE TYPE
+    # unconditionally instead — safe, since this migration only ever runs
+    # once against a fresh database.
+    bind = op.get_bind()
+    use_checkfirst = not op.get_context().as_sql
+    for enum_type in (expense_category, transit_mode, store_type, chat_role):
+        enum_type.create(bind, checkfirst=use_checkfirst)
 
     expense_category_ref = postgresql.ENUM(*EXPENSE_CATEGORY_VALUES, name="expense_category", create_type=False)
     transit_mode_ref = postgresql.ENUM(*TRANSIT_MODE_VALUES, name="transit_mode", create_type=False)
@@ -195,7 +198,6 @@ def downgrade() -> None:
     op.drop_table("users")
 
     bind = op.get_bind()
-    postgresql.ENUM(name="chat_role").drop(bind, checkfirst=True)
-    postgresql.ENUM(name="store_type").drop(bind, checkfirst=True)
-    postgresql.ENUM(name="transit_mode").drop(bind, checkfirst=True)
-    postgresql.ENUM(name="expense_category").drop(bind, checkfirst=True)
+    use_checkfirst = not op.get_context().as_sql
+    for enum_name in ("chat_role", "store_type", "transit_mode", "expense_category"):
+        postgresql.ENUM(name=enum_name).drop(bind, checkfirst=use_checkfirst)
