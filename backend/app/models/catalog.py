@@ -68,15 +68,6 @@ class ProductListing(UUIDPKMixin, TimestampMixin, Base):
     )
 
     price_krw: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
-    transit_cost_krw: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), default=Decimal("0"), server_default="0", nullable=False
-    )
-    transit_mode: Mapped[TransitMode] = mapped_column(
-        SAEnum(TransitMode, name="transit_mode", values_callable=enum_values),
-        default=TransitMode.WALK,
-        server_default=TransitMode.WALK.value,
-        nullable=False,
-    )
     in_stock: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
 
     product: Mapped["Product"] = relationship(back_populates="listings")
