@@ -71,9 +71,17 @@ emulator vs. iOS simulator vs. physical device).
       tenant-scoped `user_id` on every owned table from the first revision).
 - [ ] Phase 3 — Core backend logic: Price-Finder / True Economic Cost engine,
       spending velocity, Financial Clarity Score.
+  - [x] Spending velocity, predictive month-end projection, and an
+        explainable Financial Clarity Score — `GET /dashboard/summary`.
+  - [ ] Price-Finder / True Economic Cost engine (Seoul retail catalog is
+        modeled in `app/models/catalog.py` but has no service or data yet).
 - [ ] Phase 4 — API routing + XAI Copilot WebSocket integration (Gemini).
-- [ ] Phase 5 — Frontend Zen Garden design system (theme, typography, colors).
+- [x] Phase 5 — Frontend Zen Garden design system (theme, typography, colors).
 - [ ] Phase 6 — Frontend dashboard & predictive budgeting UI.
+  - [x] Dashboard screen: Financial Clarity Score, budget snapshot,
+        velocity/projection, category breakdown.
+  - [x] Budget screen: cash-flow risk outlook, expense history.
+  - [ ] Price-Finder screen (blocked on the Phase 3 sub-item above).
 - [ ] Phase 7 — Frontend XAI Copilot chat UI with reasoning panels.
 - [ ] Phase 8 — Security review, JWT auth, API rate limiting.
 

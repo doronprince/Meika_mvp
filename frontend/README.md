@@ -30,8 +30,27 @@ flutter run \
 # Physical device — point at your machine's LAN IP instead of localhost.
 ```
 
+### Dev user identity
+
+There's no login yet (Phase 8 JWT auth is still pending), so every API call
+sends a fixed `X-User-Id` header — see `ApiConfig.devUserId`. It defaults to
+the UUID `backend/scripts/seed_dev_user.py` seeds:
+
+```bash
+cd ../backend
+python -m scripts.seed_dev_user
+```
+
+Run that once against your local Postgres before using the Dashboard or
+Budget screens, or you'll hit a 404 (no matching user). Override the id with
+`--dart-define=MEIKA_DEV_USER_ID=<uuid>` to point at a different seeded user.
+
 ## Status
 
-Phase 1 scaffold: app shell, navigation, and the Zen Garden theme are wired up.
-Dashboard, Price-Finder, Budget, and Copilot screens are placeholders pending
-Phases 5–7.
+- App shell, navigation, and the Zen Garden theme (Phase 5) are wired up.
+- Dashboard and Budget screens (Phase 6) are live: Financial Clarity Score,
+  budget snapshot, spending velocity/projection, category breakdown, and
+  expense history — backed by `GET /dashboard/summary` and `GET /expenses`.
+- Price-Finder and Copilot screens are still placeholders — Price-Finder
+  needs the Phase 3 True Economic Cost engine, Copilot needs the Phase 4/7
+  Gemini WebSocket integration.

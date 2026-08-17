@@ -15,4 +15,12 @@ class ApiConfig {
     'MEIKA_WS_BASE_URL',
     defaultValue: 'ws://10.0.2.2:8000/ws',
   );
+
+  /// Interim tenant identity sent as `X-User-Id` until Phase 8 JWT auth
+  /// lands (mirrors the backend's [[api/deps.py]] guardrail). Defaults to
+  /// the fixed UUID `backend/scripts/seed_dev_user.py` seeds.
+  static const String devUserId = String.fromEnvironment(
+    'MEIKA_DEV_USER_ID',
+    defaultValue: '00000000-0000-0000-0000-000000000001',
+  );
 }

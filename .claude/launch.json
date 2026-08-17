@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "meika-frontend",
+      "cwd": "frontend",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": [
+        "run",
+        "-d",
+        "web-server",
+        "--web-port=8080",
+        "--dart-define=MEIKA_API_BASE_URL=http://localhost:8000/api/v1",
+        "--dart-define=MEIKA_WS_BASE_URL=ws://localhost:8000/ws"
+      ],
+      "port": 8080
+    }
+  ]
+}
