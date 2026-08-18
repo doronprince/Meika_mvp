@@ -69,19 +69,22 @@ emulator vs. iOS simulator vs. physical device).
       Compose, Flutter frontend init.
 - [ ] Phase 2 — Database schema, SQLAlchemy models, Alembic migrations (with
       tenant-scoped `user_id` on every owned table from the first revision).
-- [ ] Phase 3 — Core backend logic: Price-Finder / True Economic Cost engine,
+- [x] Phase 3 — Core backend logic: Price-Finder / True Economic Cost engine,
       spending velocity, Financial Clarity Score.
   - [x] Spending velocity, predictive month-end projection, and an
         explainable Financial Clarity Score — `GET /dashboard/summary`.
-  - [ ] Price-Finder / True Economic Cost engine (Seoul retail catalog is
-        modeled in `app/models/catalog.py` but has no service or data yet).
+  - [x] Price-Finder / True Economic Cost engine — `GET /price-finder/search`
+        compares real sticker price against price + transit cost across
+        Seoul retailers, with a computed (never asserted) rising/falling/
+        stable price trend per listing. Seed data: `scripts/seed_catalog.py`.
 - [ ] Phase 4 — API routing + XAI Copilot WebSocket integration (Gemini).
 - [x] Phase 5 — Frontend Zen Garden design system (theme, typography, colors).
-- [ ] Phase 6 — Frontend dashboard & predictive budgeting UI.
+- [x] Phase 6 — Frontend dashboard & predictive budgeting UI.
   - [x] Dashboard screen: Financial Clarity Score, budget snapshot,
         velocity/projection, category breakdown.
   - [x] Budget screen: cash-flow risk outlook, expense history.
-  - [ ] Price-Finder screen (blocked on the Phase 3 sub-item above).
+  - [x] Price-Finder screen: search, per-store True Economic Cost
+        comparison, price trend badges, computed recommendation banner.
 - [ ] Phase 7 — Frontend XAI Copilot chat UI with reasoning panels.
 - [ ] Phase 8 — Security review, JWT auth, API rate limiting.
 

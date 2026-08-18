@@ -45,12 +45,22 @@ Run that once against your local Postgres before using the Dashboard or
 Budget screens, or you'll hit a 404 (no matching user). Override the id with
 `--dart-define=MEIKA_DEV_USER_ID=<uuid>` to point at a different seeded user.
 
+The Price-Finder screen reads shared catalog data instead (not user-owned),
+seeded separately:
+
+```bash
+cd ../backend
+python -m scripts.seed_catalog
+```
+
 ## Status
 
 - App shell, navigation, and the Zen Garden theme (Phase 5) are wired up.
 - Dashboard and Budget screens (Phase 6) are live: Financial Clarity Score,
   budget snapshot, spending velocity/projection, category breakdown, and
   expense history — backed by `GET /dashboard/summary` and `GET /expenses`.
-- Price-Finder and Copilot screens are still placeholders — Price-Finder
-  needs the Phase 3 True Economic Cost engine, Copilot needs the Phase 4/7
-  Gemini WebSocket integration.
+- Price-Finder screen (Phase 6) is live: search, per-store True Economic
+  Cost comparison, computed price trend badges, and a recommendation banner
+  that explains *why* — backed by `GET /price-finder/search`.
+- Copilot screen is still a placeholder — needs the Phase 4/7 Gemini
+  WebSocket integration.
