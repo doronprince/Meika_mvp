@@ -1,0 +1,145 @@
+import uuid
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
+
+from app.ai import copilot_service
+from app.db.session import AsyncSessionLocal, engine
+from app.main import app
+from app.models.enums import ChatRole
+from app.models.user import User
+from app.services import chat_service
+
+
+async def _db_reachable() -> bool:
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
+
+
+@pytest.mark.asyncio
+async def test_chat_history_without_user_id_header_is_rejected():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/copilot/history")
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_chat_history_with_malformed_user_id_header_is_unauthorized():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/copilot/history", headers={"X-User-Id": "not-a-uuid"})
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_chat_history_empty_for_new_user():
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        session.add(user)
+        await session.commit()
+        user_id = str(user.id)
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/v1/copilot/history", headers={"X-User-Id": user_id})
+
+        assert response.status_code == 200
+        assert response.json() == []
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+            await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_generate_reply_is_grounded_in_real_dashboard_numbers():
+    """No LLM involved here (GEMINI_API_KEY is unset in test env) — this
+    exercises the deterministic fallback that every reply falls back to,
+    and asserts the xai_factors are the actual computed clarity-score
+    factors, never fabricated text."""
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    try:
+        async with AsyncSessionLocal() as session:
+            content, factors = await copilot_service.generate_reply(session, user_id, "how is my budget doing?")
+
+        assert "Financial Clarity Score" in content
+        assert "100" in content  # a brand-new user has no spend yet
+        assert len(factors) == 3  # pace, projection, concentration — see dashboard_service
+        assert all(factor.detail for factor in factors)
+
+        async with AsyncSessionLocal() as session:
+            saved = await chat_service.add_message(session, user_id, ChatRole.ASSISTANT, content, factors)
+        assert saved.xai_factors is not None
+        assert len(saved.xai_factors) == 3
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+            await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_generate_reply_answers_a_product_question_with_real_comparison():
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+
+    from datetime import datetime, timezone
+    from decimal import Decimal
+
+    from app.models.catalog import PriceQuote, Product, ProductListing, Store
+    from app.models.enums import ExpenseCategory, StoreType, TransitMode
+
+    product_name = f"Widgetronic {uuid.uuid4()}"
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        store = Store(
+            name=f"Test Store {uuid.uuid4()}",
+            store_type=StoreType.ONLINE,
+            location="Delivered",
+            default_transit_mode=TransitMode.WALK,
+            default_transit_cost_krw=Decimal("0"),
+            rating=Decimal("4.5"),
+        )
+        product = Product(name=product_name, category=ExpenseCategory.ELECTRONICS)
+        session.add_all([user, store, product])
+        await session.flush()
+        listing = ProductListing(product_id=product.id, store_id=store.id, price_krw=Decimal("9900"))
+        session.add(listing)
+        await session.flush()
+        session.add(PriceQuote(listing_id=listing.id, price_krw=Decimal("9900"), observed_at=datetime.now(timezone.utc)))
+        await session.commit()
+        user_id, store_id, product_id = user.id, store.id, product.id
+
+    try:
+        async with AsyncSessionLocal() as session:
+            content, factors = await copilot_service.generate_reply(session, user_id, "how much does Widgetronic cost?")
+
+        assert product_name in content
+        assert "9,900" in content  # the real seeded price, not a fabricated one
+        assert len(factors) == 1
+        assert "9,900" in factors[0].detail
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+            await session.execute(text("DELETE FROM products WHERE id = :id"), {"id": product_id})
+            await session.execute(text("DELETE FROM stores WHERE id = :id"), {"id": store_id})
+            await session.commit()

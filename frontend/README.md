@@ -62,5 +62,9 @@ python -m scripts.seed_catalog
 - Price-Finder screen (Phase 6) is live: search, per-store True Economic
   Cost comparison, computed price trend badges, and a recommendation banner
   that explains *why* — backed by `GET /price-finder/search`.
-- Copilot screen is still a placeholder — needs the Phase 4/7 Gemini
-  WebSocket integration.
+- Copilot screen (Phase 7) is live: chat bubbles, a "Why?" panel per
+  assistant reply showing the real computed factors behind it, connected
+  over `ws://.../ws/copilot?user_id=<uuid>`. Works out of the box with
+  `GEMINI_API_KEY` unset (the backend falls back to a deterministic reply
+  grounded in the same real numbers); set the key to get Gemini-phrased
+  replies instead — that path hasn't been exercised against a real key yet.

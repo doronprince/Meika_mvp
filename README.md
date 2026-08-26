@@ -77,7 +77,18 @@ emulator vs. iOS simulator vs. physical device).
         compares real sticker price against price + transit cost across
         Seoul retailers, with a computed (never asserted) rising/falling/
         stable price trend per listing. Seed data: `scripts/seed_catalog.py`.
-- [ ] Phase 4 — API routing + XAI Copilot WebSocket integration (Gemini).
+- [x] Phase 4 — API routing + XAI Copilot WebSocket integration (Gemini).
+  - [x] `ws://.../ws/copilot?user_id=<uuid>` — every reply is grounded in
+        real computed numbers (Financial Clarity Score factors or a
+        Price-Finder recommendation), never fabricated, whether or not
+        Gemini is configured. Chat history persists via `ChatMessage` and
+        is readable over `GET /copilot/history`.
+  - [x] Deterministic fallback reply path — fully tested, this is what runs
+        with `GEMINI_API_KEY` unset (the default in `.env.example`).
+  - [ ] **Not verified**: the live Gemini call path (`google-genai`). It's
+        implemented and wrapped so any failure falls back to the
+        deterministic path, but nobody has run it against a real API key
+        yet — set `GEMINI_API_KEY` and try a request before trusting it.
 - [x] Phase 5 — Frontend Zen Garden design system (theme, typography, colors).
 - [x] Phase 6 — Frontend dashboard & predictive budgeting UI.
   - [x] Dashboard screen: Financial Clarity Score, budget snapshot,
@@ -85,7 +96,12 @@ emulator vs. iOS simulator vs. physical device).
   - [x] Budget screen: cash-flow risk outlook, expense history.
   - [x] Price-Finder screen: search, per-store True Economic Cost
         comparison, price trend badges, computed recommendation banner.
-- [ ] Phase 7 — Frontend XAI Copilot chat UI with reasoning panels.
+- [x] Phase 7 — Frontend XAI Copilot chat UI with reasoning panels.
+  - [x] Copilot screen: chat bubbles, an expandable "Why?" panel per
+        assistant reply showing the real computed factors behind it,
+        connection/error states. Verified end-to-end over a live WebSocket
+        connection against the running backend; not yet screenshot-verified
+        in-browser (tooling issue this session, not a known app defect).
 - [ ] Phase 8 — Security review, JWT auth, API rate limiting.
 
 ## Guardrails

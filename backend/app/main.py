@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import dashboard, expense, health, price_finder
+from app.routers import chat, dashboard, expense, health, price_finder, ws_copilot
 
 
 @asynccontextmanager
@@ -35,6 +35,8 @@ def create_application() -> FastAPI:
     application.include_router(expense.router, prefix=settings.api_v1_prefix)
     application.include_router(dashboard.router, prefix=settings.api_v1_prefix)
     application.include_router(price_finder.router, prefix=settings.api_v1_prefix)
+    application.include_router(chat.router, prefix=settings.api_v1_prefix)
+    application.include_router(ws_copilot.router, prefix="/ws")
 
     return application
 
