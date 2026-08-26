@@ -209,10 +209,24 @@ class _StoreRow extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  '${comparison.storeType.displayName} · ★${comparison.rating.toStringAsFixed(1)}'
-                  '${comparison.inStock ? '' : ' · Out of stock'}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.55)),
+                Row(
+                  children: [
+                    Text(
+                      '${comparison.storeType.displayName} · ',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.55)),
+                    ),
+                    Icon(Icons.star_rounded, size: 13, color: ZenColors.sumi.withValues(alpha: 0.55)),
+                    Text(
+                      comparison.rating.toStringAsFixed(1) + (comparison.inStock ? '' : ' · Out of stock'),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.55)),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Row(
