@@ -1,6 +1,7 @@
-"""Seed a fixed-UUID dev user with sample expenses, for local frontend testing
-against the interim X-User-Id header (see [[tenant-isolation]] guardrail,
-[[api/deps.py]]) until Phase 8 JWT auth lands.
+"""Seed a fixed-UUID dev user with sample expenses, for local frontend
+testing against the [[tenant-isolation]] guardrail. Logs in through the real
+Phase 8 JWT auth flow (POST /api/v1/auth/login) with the credentials printed
+below — there's no more X-User-Id shortcut.
 
 Idempotent: re-running replaces the dev user's expenses with a fresh batch
 dated relative to today, so dashboard metrics (spending velocity, projected
@@ -18,13 +19,18 @@ from decimal import Decimal
 
 from sqlalchemy import delete, select
 
+from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
 from app.models.enums import ExpenseCategory, TransitMode
 from app.models.expense import Expense
 from app.models.user import User
 
 DEV_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
-DEV_USER_EMAIL = "dev@meika.local"
+# .example is ICANN-reserved for documentation/testing (RFC 2606) — unlike
+# .local, it passes EmailStr's reserved-domain check on the real /auth/login
+# endpoint this user now has to authenticate through.
+DEV_USER_EMAIL = "dev@meika.example"
+DEV_USER_PASSWORD = "MeikaDemo123!"
 
 # (days_ago, title, category, amount_krw, store_name, transit_cost_krw, transit_mode)
 SAMPLE_EXPENSES = [
@@ -44,10 +50,11 @@ async def seed() -> None:
     async with AsyncSessionLocal() as session:
         user = await session.get(User, DEV_USER_ID)
         if user is None:
-            user = User(id=DEV_USER_ID, email=DEV_USER_EMAIL, hashed_password="dev-seed-not-a-real-hash")
+            user = User(id=DEV_USER_ID, email=DEV_USER_EMAIL, hashed_password=hash_password(DEV_USER_PASSWORD))
             session.add(user)
         else:
             user.email = DEV_USER_EMAIL
+            user.hashed_password = hash_password(DEV_USER_PASSWORD)
 
         await session.execute(delete(Expense).where(Expense.user_id == DEV_USER_ID))
 
@@ -75,7 +82,7 @@ async def seed() -> None:
         count = await session.execute(select(Expense).where(Expense.user_id == DEV_USER_ID))
         n = len(count.scalars().all())
         print(f"Seeded dev user {DEV_USER_ID} ({DEV_USER_EMAIL}) with {n} expenses this month.")
-        print(f"Use header: X-User-Id: {DEV_USER_ID}")
+        print(f"Log in with: email={DEV_USER_EMAIL}  password={DEV_USER_PASSWORD}")
 
 
 if __name__ == "__main__":

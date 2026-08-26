@@ -5,14 +5,16 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../../core/auth/auth_token_provider.dart';
 import '../../core/config/api_config.dart';
 import '../../core/network/api_client.dart';
 import '../models/chat_message.dart';
 
 class ChatRepository {
   final Dio _dio;
+  final Ref _ref;
 
-  ChatRepository(this._dio);
+  ChatRepository(this._dio, this._ref);
 
   Future<List<ChatMessage>> fetchHistory() async {
     final response = await _dio.get('/copilot/history');
@@ -22,7 +24,11 @@ class ChatRepository {
   }
 
   WebSocketChannel connect() {
-    final uri = Uri.parse('${ApiConfig.wsBaseUrl}/copilot?user_id=${ApiConfig.devUserId}');
+    final token = _ref.read(authTokenProvider);
+    if (token == null) {
+      throw StateError('Cannot open the Copilot connection while signed out.');
+    }
+    final uri = Uri.parse('${ApiConfig.wsBaseUrl}/copilot?token=$token');
     return WebSocketChannel.connect(uri);
   }
 
@@ -32,5 +38,5 @@ class ChatRepository {
 }
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
-  return ChatRepository(ref.watch(dioProvider));
+  return ChatRepository(ref.watch(dioProvider), ref);
 });

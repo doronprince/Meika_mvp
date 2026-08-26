@@ -33,6 +33,16 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
 
+    # Dev-only default so the app boots without a .env file (see class
+    # docstring). Production MUST override this via a real environment
+    # variable — a guessable secret defeats JWT signing entirely.
+    jwt_secret_key: str = "dev-only-insecure-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60 * 24
+
+    rate_limit_per_minute: int = 60
+    auth_rate_limit_per_minute: int = 10
+
     @property
     def sqlalchemy_database_url(self) -> str:
         if self.database_url:

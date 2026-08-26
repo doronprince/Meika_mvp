@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import chat, dashboard, expense, health, price_finder, ws_copilot
+from app.core.rate_limit import RateLimitMiddleware
+from app.routers import auth, chat, dashboard, expense, health, price_finder, ws_copilot
 
 
 @asynccontextmanager
@@ -23,6 +24,14 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Order matters: Starlette makes the LAST-added middleware outermost, so
+    # CORS is added last to ensure even a 429 from the rate limiter carries
+    # proper CORS headers back to the browser.
+    application.add_middleware(
+        RateLimitMiddleware,
+        general_limit=settings.rate_limit_per_minute,
+        auth_limit=settings.auth_rate_limit_per_minute,
+    )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
@@ -32,6 +41,7 @@ def create_application() -> FastAPI:
     )
 
     application.include_router(health.router, prefix=settings.api_v1_prefix)
+    application.include_router(auth.router, prefix=settings.api_v1_prefix)
     application.include_router(expense.router, prefix=settings.api_v1_prefix)
     application.include_router(dashboard.router, prefix=settings.api_v1_prefix)
     application.include_router(price_finder.router, prefix=settings.api_v1_prefix)

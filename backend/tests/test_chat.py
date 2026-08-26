@@ -10,6 +10,7 @@ from app.main import app
 from app.models.enums import ChatRole
 from app.models.user import User
 from app.services import chat_service
+from tests.conftest import auth_headers
 
 
 async def _db_reachable() -> bool:
@@ -22,19 +23,19 @@ async def _db_reachable() -> bool:
 
 
 @pytest.mark.asyncio
-async def test_chat_history_without_user_id_header_is_rejected():
+async def test_chat_history_without_auth_header_is_rejected():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/v1/copilot/history")
 
-    assert response.status_code == 422
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
-async def test_chat_history_with_malformed_user_id_header_is_unauthorized():
+async def test_chat_history_with_invalid_token_is_unauthorized():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/copilot/history", headers={"X-User-Id": "not-a-uuid"})
+        response = await client.get("/api/v1/copilot/history", headers={"Authorization": "Bearer not-a-real-token"})
 
     assert response.status_code == 401
 
@@ -48,12 +49,12 @@ async def test_chat_history_empty_for_new_user():
         user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
         session.add(user)
         await session.commit()
-        user_id = str(user.id)
+        user_id = user.id
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get("/api/v1/copilot/history", headers={"X-User-Id": user_id})
+            response = await client.get("/api/v1/copilot/history", headers=auth_headers(user_id))
 
         assert response.status_code == 200
         assert response.json() == []

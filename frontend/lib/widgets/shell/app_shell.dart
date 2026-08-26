@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/auth/auth_token_provider.dart';
 import '../../core/theme/zen_theme.dart';
 import '../../screens/budget_screen.dart';
 import '../../screens/copilot_screen.dart';
@@ -7,14 +9,14 @@ import '../../screens/dashboard_screen.dart';
 import '../../screens/price_finder_screen.dart';
 import '../enso_mark.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   int _index = 0;
 
   static const _screens = [
@@ -50,6 +52,13 @@ class _AppShellState extends State<AppShell> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Log out',
+            onPressed: () => ref.read(authTokenProvider.notifier).state = null,
+          ),
+        ],
       ),
       body: _screens[_index],
       bottomNavigationBar: NavigationBar(

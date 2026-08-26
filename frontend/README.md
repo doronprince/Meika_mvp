@@ -30,23 +30,24 @@ flutter run \
 # Physical device — point at your machine's LAN IP instead of localhost.
 ```
 
-### Dev user identity
+### Signing in
 
-There's no login yet (Phase 8 JWT auth is still pending), so every API call
-sends a fixed `X-User-Id` header — see `ApiConfig.devUserId`. It defaults to
-the UUID `backend/scripts/seed_dev_user.py` seeds:
+Phase 8 JWT auth is live — the app opens on a login screen. Either register a
+fresh account there ("New here? Create an account"), or log in with the
+seeded dev account:
 
 ```bash
 cd ../backend
 python -m scripts.seed_dev_user
 ```
 
-Run that once against your local Postgres before using the Dashboard or
-Budget screens, or you'll hit a 404 (no matching user). Override the id with
-`--dart-define=MEIKA_DEV_USER_ID=<uuid>` to point at a different seeded user.
+That prints the demo email/password to log in with (re-run it any time to
+refresh the seeded expenses to "this month" — it's idempotent). The session
+token is held in memory only (`authTokenProvider`) — there's no persistence
+yet, so a page reload signs you back out.
 
-The Price-Finder screen reads shared catalog data instead (not user-owned),
-seeded separately:
+The Price-Finder screen reads shared catalog data instead (not user-owned,
+no login needed to search it), seeded separately:
 
 ```bash
 cd ../backend
@@ -56,6 +57,10 @@ python -m scripts.seed_catalog
 ## Status
 
 - App shell, navigation, and the Zen Garden theme (Phase 5) are wired up.
+- Login screen (Phase 8) gates the app: register or log in against
+  `POST /auth/register` / `POST /auth/login`, which return a JWT that a Dio
+  interceptor attaches to every REST call and the Copilot WebSocket connects
+  with (`?token=`). A logout button lives in the app bar.
 - Dashboard and Budget screens (Phase 6) are live: Financial Clarity Score,
   budget snapshot, spending velocity/projection, category breakdown, and
   expense history — backed by `GET /dashboard/summary` and `GET /expenses`.
@@ -63,8 +68,14 @@ python -m scripts.seed_catalog
   Cost comparison, computed price trend badges, and a recommendation banner
   that explains *why* — backed by `GET /price-finder/search`.
 - Copilot screen (Phase 7) is live: chat bubbles, a "Why?" panel per
-  assistant reply showing the real computed factors behind it, connected
-  over `ws://.../ws/copilot?user_id=<uuid>`. Works out of the box with
-  `GEMINI_API_KEY` unset (the backend falls back to a deterministic reply
-  grounded in the same real numbers); set the key to get Gemini-phrased
-  replies instead — that path hasn't been exercised against a real key yet.
+  assistant reply showing the real computed factors behind it. Works out of
+  the box with `GEMINI_API_KEY` unset (the backend falls back to a
+  deterministic reply grounded in the same real numbers); set the key to get
+  Gemini-phrased replies instead — that path hasn't been exercised against a
+  real key yet.
+
+**Known gap:** the JWT is in-memory only, so the app signs you out on every
+restart. Verified end-to-end via curl/live-WebSocket against the real
+backend and `flutter analyze`; the login flow itself hasn't been
+screenshot-verified in-browser this session (a Browser-pane display issue,
+not a known app defect) — give it a look before relying on it for a demo.

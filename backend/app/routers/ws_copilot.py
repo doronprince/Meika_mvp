@@ -1,10 +1,10 @@
 import logging
-import uuid
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai import copilot_service
+from app.core.security import InvalidTokenError, decode_access_token
 from app.db.session import get_db
 from app.models.enums import ChatRole
 from app.schemas.chat import ChatMessageRead
@@ -18,13 +18,18 @@ router = APIRouter()
 @router.websocket("/copilot")
 async def copilot_websocket(
     websocket: WebSocket,
-    user_id: uuid.UUID = Query(...),
+    token: str = Query(...),
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """One connection per chat session. `user_id` stands in for auth until
-    Phase 8 JWT lands — see [[api/deps.py]] guardrail note; the REST routes'
-    X-User-Id header isn't available on a browser WebSocket handshake, so
-    the same identity travels as a query param instead."""
+    """One connection per chat session. A browser WebSocket handshake can't
+    carry the REST routes' Authorization header, so the same JWT travels as
+    a query param instead — see [[api/deps.py]] guardrail note."""
+    try:
+        user_id = decode_access_token(token)
+    except InvalidTokenError:
+        await websocket.close(code=4401, reason="Invalid or expired token")
+        return
+
     await websocket.accept()
     try:
         while True:

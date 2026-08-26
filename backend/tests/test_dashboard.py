@@ -9,6 +9,7 @@ from sqlalchemy import text
 from app.db.session import AsyncSessionLocal, engine
 from app.main import app
 from app.models.user import User
+from tests.conftest import auth_headers
 
 EXPENSE_PAYLOAD = {
     "title": "Groceries at Emart",
@@ -39,19 +40,21 @@ async def _db_reachable() -> bool:
 
 
 @pytest.mark.asyncio
-async def test_dashboard_summary_without_user_id_header_is_rejected():
+async def test_dashboard_summary_without_auth_header_is_rejected():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/v1/dashboard/summary")
 
-    assert response.status_code == 422
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
-async def test_dashboard_summary_with_malformed_user_id_header_is_unauthorized():
+async def test_dashboard_summary_with_invalid_token_is_unauthorized():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/dashboard/summary", headers={"X-User-Id": "not-a-uuid"})
+        response = await client.get(
+            "/api/v1/dashboard/summary", headers={"Authorization": "Bearer not-a-real-token"}
+        )
 
     assert response.status_code == 401
 
@@ -63,9 +66,7 @@ async def test_dashboard_summary_for_unknown_user_is_not_found():
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get(
-            "/api/v1/dashboard/summary", headers={"X-User-Id": str(uuid.uuid4())}
-        )
+        response = await client.get("/api/v1/dashboard/summary", headers=auth_headers(uuid.uuid4()))
 
     assert response.status_code == 404
 
@@ -82,10 +83,10 @@ async def test_dashboard_summary_empty_state_has_no_fabricated_numbers():
         user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
         session.add(user)
         await session.commit()
-        user_id = str(user.id)
+        user_id = user.id
         budget = user.monthly_budget_krw
 
-    headers = {"X-User-Id": user_id}
+    headers = auth_headers(user_id)
     transport = ASGITransport(app=app)
 
     try:
@@ -115,9 +116,9 @@ async def test_dashboard_summary_reflects_logged_expenses():
         user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
         session.add(user)
         await session.commit()
-        user_id = str(user.id)
+        user_id = user.id
 
-    headers = {"X-User-Id": user_id}
+    headers = auth_headers(user_id)
     transport = ASGITransport(app=app)
 
     try:

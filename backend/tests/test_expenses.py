@@ -7,6 +7,7 @@ from sqlalchemy import text
 from app.db.session import AsyncSessionLocal, engine
 from app.main import app
 from app.models.user import User
+from tests.conftest import auth_headers
 
 VALID_PAYLOAD = {
     "title": "Groceries at Emart",
@@ -28,20 +29,20 @@ async def _db_reachable() -> bool:
 
 
 @pytest.mark.asyncio
-async def test_create_expense_without_user_id_header_is_rejected():
+async def test_create_expense_without_auth_header_is_rejected():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post("/api/v1/expenses", json=VALID_PAYLOAD)
 
-    assert response.status_code == 422
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
-async def test_create_expense_with_malformed_user_id_header_is_unauthorized():
+async def test_create_expense_with_invalid_token_is_unauthorized():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
-            "/api/v1/expenses", json=VALID_PAYLOAD, headers={"X-User-Id": "not-a-uuid"}
+            "/api/v1/expenses", json=VALID_PAYLOAD, headers={"Authorization": "Bearer not-a-real-token"}
         )
 
     assert response.status_code == 401
@@ -52,9 +53,7 @@ async def test_create_expense_rejects_non_positive_amount():
     transport = ASGITransport(app=app)
     payload = {**VALID_PAYLOAD, "amount_krw": "0"}
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post(
-            "/api/v1/expenses", json=payload, headers={"X-User-Id": str(uuid.uuid4())}
-        )
+        response = await client.post("/api/v1/expenses", json=payload, headers=auth_headers(uuid.uuid4()))
 
     assert response.status_code == 422
 
@@ -64,9 +63,7 @@ async def test_create_expense_rejects_unknown_category():
     transport = ASGITransport(app=app)
     payload = {**VALID_PAYLOAD, "category": "not_a_real_category"}
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post(
-            "/api/v1/expenses", json=payload, headers={"X-User-Id": str(uuid.uuid4())}
-        )
+        response = await client.post("/api/v1/expenses", json=payload, headers=auth_headers(uuid.uuid4()))
 
     assert response.status_code == 422
 
@@ -86,9 +83,9 @@ async def test_expense_crud_round_trip():
         user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
         session.add(user)
         await session.commit()
-        user_id = str(user.id)
+        user_id = user.id
 
-    headers = {"X-User-Id": user_id}
+    headers = auth_headers(user_id)
     transport = ASGITransport(app=app)
 
     try:
@@ -115,7 +112,7 @@ async def _run_crud_round_trip(transport, headers):
         assert get_response.status_code == 200
 
         other_user_response = await client.get(
-            f"/api/v1/expenses/{expense_id}", headers={"X-User-Id": str(uuid.uuid4())}
+            f"/api/v1/expenses/{expense_id}", headers=auth_headers(uuid.uuid4())
         )
         assert other_user_response.status_code == 404
 

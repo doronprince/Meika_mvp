@@ -38,6 +38,10 @@ docker compose up --build
 - API: http://localhost:8000
 - Docs: http://localhost:8000/docs
 - Health check: http://localhost:8000/api/v1/health — reports `{"status": "ok", "database": "ok" | "unreachable"}`
+- Every other endpoint needs a real account now (Phase 8): register via
+  `POST /auth/register` (or use the Flutter app's sign-up form), or seed one
+  with `python -m scripts.seed_dev_user` from `backend/` — see
+  `frontend/README.md` for the demo credentials it prints.
 
 ### Backend only (no Docker)
 
@@ -78,7 +82,7 @@ emulator vs. iOS simulator vs. physical device).
         Seoul retailers, with a computed (never asserted) rising/falling/
         stable price trend per listing. Seed data: `scripts/seed_catalog.py`.
 - [x] Phase 4 — API routing + XAI Copilot WebSocket integration (Gemini).
-  - [x] `ws://.../ws/copilot?user_id=<uuid>` — every reply is grounded in
+  - [x] `ws://.../ws/copilot?token=<jwt>` — every reply is grounded in
         real computed numbers (Financial Clarity Score factors or a
         Price-Finder recommendation), never fabricated, whether or not
         Gemini is configured. Chat history persists via `ChatMessage` and
@@ -102,14 +106,30 @@ emulator vs. iOS simulator vs. physical device).
         connection/error states. Verified end-to-end over a live WebSocket
         connection against the running backend; not yet screenshot-verified
         in-browser (tooling issue this session, not a known app defect).
-- [ ] Phase 8 — Security review, JWT auth, API rate limiting.
+- [x] Phase 8 — Security review, JWT auth, API rate limiting.
+  - [x] `POST /auth/register` and `POST /auth/login` issue a signed JWT
+        (`bcrypt` password hashing, `pyjwt` signing). `get_current_user_id`
+        now requires a valid `Authorization: Bearer` token everywhere — the
+        interim `X-User-Id` header is gone, including on the WebSocket
+        (`?token=` query param, since a browser WS handshake can't carry a
+        custom header).
+  - [x] In-memory sliding-window rate limiting (`app/core/rate_limit.py`) —
+        60 req/min general, 10 req/min on `/auth/*`. Per-process only, see
+        the module docstring — swap for Redis before running >1 worker.
+  - [ ] **Not a full security review.** This covers auth + rate limiting
+        only: no HTTPS enforcement, no refresh-token/token-revocation flow,
+        no brute-force lockout beyond the rate limit, and the frontend
+        token is in-memory only (signing out on every app restart — no
+        secure storage yet). Treat this as a solid MVP baseline, not an
+        audit sign-off.
 
 ## Guardrails
 
 - **Tenant isolation:** every user-owned table carries `user_id`; every query
   is scoped through it. No cross-tenant reads, ever.
 - **No hardcoded secrets:** `.env` is gitignored; `.env.example` documents the
-  shape only.
+  shape only. `JWT_SECRET_KEY` boots with an insecure dev default if unset —
+  never rely on that outside local development.
 - **XAI enforcement:** every "Buy" / "Wait" / budget directive from the
   copilot renders alongside the specific computed factors that produced it —
   no fabricated reasoning strings.
