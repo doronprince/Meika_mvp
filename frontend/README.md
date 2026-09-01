@@ -54,6 +54,11 @@ cd ../backend
 python -m scripts.seed_catalog
 ```
 
+Set `SERPAPI_API_KEY` in `backend/.env` (free tier at [serpapi.com](https://serpapi.com),
+100 searches/month, no card required) to search real, live products
+worldwide instead of just the 5-item seed catalog — see the root README's
+"Beyond the 8 phases" section for how the fallback works with no key set.
+
 ## Status
 
 - App shell, navigation, and the Zen Garden theme (Phase 5) are wired up.
@@ -66,7 +71,11 @@ python -m scripts.seed_catalog
   expense history — backed by `GET /dashboard/summary` and `GET /expenses`.
 - Price-Finder screen (Phase 6) is live: search, per-store True Economic
   Cost comparison, computed price trend badges, and a recommendation banner
-  that explains *why* — backed by `GET /price-finder/search`.
+  that explains *why* — backed by `GET /price-finder/search`. With
+  `SERPAPI_API_KEY` set, results are real live listings from anywhere in
+  the world (a green "Live" badge marks these, with a "View listing" link
+  to the real product) instead of the 5-item seed catalog — verified live
+  in-browser with real Amazon.de/MediaMarkt/Target results.
 - Copilot screen (Phase 7) is live: chat bubbles, a "Why?" panel per
   assistant reply showing the real computed factors behind it. Works out of
   the box with `GEMINI_API_KEY` unset (the backend falls back to a

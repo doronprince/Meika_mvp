@@ -77,6 +77,7 @@ class StoreComparison {
   final PriceTrend priceTrend;
   final double rating;
   final bool inStock;
+  final String? listingUrl;
 
   const StoreComparison({
     required this.storeId,
@@ -89,6 +90,7 @@ class StoreComparison {
     required this.priceTrend,
     required this.rating,
     required this.inStock,
+    required this.listingUrl,
   });
 
   factory StoreComparison.fromJson(Map<String, dynamic> json) {
@@ -103,6 +105,7 @@ class StoreComparison {
       priceTrend: PriceTrend.fromJson(json['price_trend'] as String),
       rating: parseAmount(json['rating']),
       inStock: json['in_stock'] as bool,
+      listingUrl: json['listing_url'] as String?,
     );
   }
 }
@@ -113,6 +116,7 @@ class PriceFinderResult {
   final ExpenseCategory category;
   final List<StoreComparison> comparisons;
   final ClarityFactorLite recommendation;
+  final bool isLive;
 
   const PriceFinderResult({
     required this.productId,
@@ -120,6 +124,7 @@ class PriceFinderResult {
     required this.category,
     required this.comparisons,
     required this.recommendation,
+    required this.isLive,
   });
 
   factory PriceFinderResult.fromJson(Map<String, dynamic> json) {
@@ -131,6 +136,7 @@ class PriceFinderResult {
           .map((c) => StoreComparison.fromJson(c as Map<String, dynamic>))
           .toList(),
       recommendation: ClarityFactorLite.fromJson(json['recommendation'] as Map<String, dynamic>),
+      isLive: json['is_live'] as bool? ?? false,
     );
   }
 }

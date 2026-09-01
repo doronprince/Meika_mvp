@@ -14,7 +14,8 @@ router = APIRouter(prefix="/price-finder", tags=["Price-Finder"])
 @router.get("/search", response_model=list[PriceFinderResult])
 async def search_price_comparisons(
     q: str | None = Query(default=None, min_length=1, max_length=255),
+    country: str | None = Query(default=None, min_length=2, max_length=2, description="ISO country code for live search, e.g. 'us', 'gb', 'kr'"),
     db: AsyncSession = Depends(get_db),
     user_id: uuid.UUID | None = Depends(get_optional_user_id),
 ) -> list[PriceFinderResult]:
-    return await price_finder_service.search_price_comparisons(db, q, user_id)
+    return await price_finder_service.search_price_comparisons(db, q, user_id, country)

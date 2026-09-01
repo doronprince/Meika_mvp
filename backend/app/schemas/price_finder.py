@@ -18,6 +18,9 @@ class StoreComparison(BaseModel):
     price_trend: PriceTrendResult
     rating: Decimal
     in_stock: bool
+    # Set only for live search results (SerpApi) — a real link to the
+    # actual listing. Always null for the seeded demo catalog.
+    listing_url: str | None = None
 
 
 class PriceFinderResult(BaseModel):
@@ -26,3 +29,8 @@ class PriceFinderResult(BaseModel):
     category: ExpenseCategory
     comparisons: list[StoreComparison]
     recommendation: XAIFactor
+    # True when these are real-time results from a live search (SerpApi)
+    # rather than the seeded demo catalog — the frontend uses this to
+    # switch labeling ("Live results" vs the catalog's usual framing) and
+    # to know price_trend is always insufficient_data here, honestly.
+    is_live: bool = False

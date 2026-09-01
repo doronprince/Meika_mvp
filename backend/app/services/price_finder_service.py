@@ -6,10 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.catalog import Product, ProductListing
+from app.models.enums import ExpenseCategory, StoreType, TransitMode
 from app.models.user import User
 from app.schemas.common import PriceTrendResult, XAIFactor
 from app.schemas.price_finder import PriceFinderResult, StoreComparison
+from app.services import fx_service, live_price_service
 from app.services.currency_display import DisplayCurrency, resolve_display_currency
+from app.services.live_price_service import LiveProduct
 
 # A price move smaller than this is noise, not a trend — see
 # [[dashboard-projection-warmup]] for the same "don't overstate a small
@@ -89,14 +92,50 @@ def _build_recommendation(comparisons: list[StoreComparison], display: DisplayCu
     )
 
 
+async def _build_live_result(product: LiveProduct, display: DisplayCurrency) -> PriceFinderResult:
+    price_krw = _q2(await fx_service.convert(product.price, product.currency, "KRW"))
+    comparison = StoreComparison(
+        store_id=uuid.uuid4(),
+        store_name=product.store_name,
+        store_type=StoreType.ONLINE,
+        price_krw=price_krw,
+        transit_cost_krw=Decimal("0"),
+        transit_mode=TransitMode.WALK,
+        true_economic_cost_krw=price_krw,
+        price_trend=PriceTrendResult.INSUFFICIENT_DATA,
+        rating=product.rating,
+        in_stock=True,
+        listing_url=product.listing_url,
+    )
+    return PriceFinderResult(
+        product_id=uuid.uuid4(),
+        product_name=product.title,
+        category=ExpenseCategory.OTHER,
+        comparisons=[comparison],
+        recommendation=_build_recommendation([comparison], display),
+        is_live=True,
+    )
+
+
 async def search_price_comparisons(
-    db: AsyncSession, query: str | None, user_id: uuid.UUID | None = None
+    db: AsyncSession,
+    query: str | None,
+    user_id: uuid.UUID | None = None,
+    country: str | None = None,
 ) -> list[PriceFinderResult]:
     display = DisplayCurrency("KRW", Decimal("1"))
+    preferred_currency: str | None = None
     if user_id is not None:
         user = await db.get(User, user_id)
         if user is not None:
-            display = await resolve_display_currency(user.preferred_currency)
+            preferred_currency = user.preferred_currency
+            display = await resolve_display_currency(preferred_currency)
+
+    if query:
+        resolved_country = country or live_price_service.country_for_currency(preferred_currency)
+        live_products = await live_price_service.search_live_products(query, resolved_country)
+        if live_products:
+            return [await _build_live_result(p, display) for p in live_products]
 
     stmt = (
         select(Product)

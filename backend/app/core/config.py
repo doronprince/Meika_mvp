@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
 
+    # Live Price-Finder search (Google Shopping via SerpApi). Empty by
+    # default — search falls back to the seeded demo catalog until a real
+    # key is set. Free tier: 100 searches/month, no card required.
+    serpapi_api_key: str = ""
+
     # Dev-only default so the app boots without a .env file (see class
     # docstring). Production MUST override this via a real environment
     # variable — a guessable secret defeats JWT signing entirely.

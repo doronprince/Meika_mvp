@@ -143,6 +143,25 @@ emulator vs. iOS simulator vs. physical device).
       just the numeric fields around it. Price-Finder personalizes this
       only when a valid token is present (`get_optional_user_id`); its
       shared catalog stays searchable anonymously in plain KRW.
+- [x] **Live Price-Finder search** — `app/services/live_price_service.py`
+      calls SerpApi's Google Shopping engine for real, live results from
+      real retailers worldwide (not the 5-item seed catalog), gated behind
+      `SERPAPI_API_KEY` (free tier: 100 searches/month, no card required).
+      No key configured, a request times out, or SerpApi returns zero
+      results → falls back to the seeded catalog automatically, same
+      graceful-degradation pattern as `GEMINI_API_KEY`. Country defaults
+      from the signed-in user's `preferred_currency` (reverse-mapped to a
+      representative country), overridable via `?country=<iso-code>`.
+  - Each live result is a single store's listing, not a same-product
+    comparison across multiple stores the seeded catalog demonstrates —
+    SerpApi's free tier doesn't group sellers per product. `price_trend`
+    is always `insufficient_data` for live results: there's no observation
+    history for a listing fetched once, and asserting a trend without one
+    would fabricate exactly what the XAI guardrail forbids.
+  - The test suite never spends real API quota: an autouse fixture
+    (`tests/conftest.py`) disables `serpapi_api_key` for every test: the
+    parsing logic itself is verified with a mocked HTTP client instead
+    (`tests/test_live_price_service.py`).
 - [ ] **Real payment processing** — explicitly not built with raw
       card/account storage under any circumstance (a PCI-DSS violation
       waiting to happen). The only path is a real processor (Stripe or

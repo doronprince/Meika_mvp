@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme/zen_theme.dart';
 import '../data/models/price_finder_result.dart';
@@ -47,9 +48,14 @@ class _PriceFinderScreenState extends ConsumerState<PriceFinderScreen> {
               controller: _controller,
               textInputAction: TextInputAction.search,
               onSubmitted: _submit,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Search a product (e.g. Rice, Ramen, Milk)…',
-                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: 'Search any product, anywhere (e.g. wireless headphones)…',
+                prefixIcon: IconButton(
+                  icon: const Icon(Icons.search_rounded),
+                  tooltip: 'Search',
+                  onPressed: () => _submit(_controller.text),
+                ),
                 suffixIcon: _controller.text.isEmpty
                     ? null
                     : IconButton(
@@ -93,7 +99,7 @@ class _ResultsList extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Text(
-            'No products found. Try "Rice", "Ramen", "Milk", "Detergent", or "USB-C".',
+            'No results. Try a different search, or "Rice", "Ramen", "Milk" for the demo catalog.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.6)),
           ),
@@ -125,13 +131,47 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              result.productName,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    result.productName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (result.isLive)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: ZenColors.matchaLight,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(color: ZenColors.matchaDark, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Live',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: ZenColors.matchaDark, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
-              result.category.displayName,
+              result.isLive ? 'Live result' : result.category.displayName,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.55)),
             ),
             const SizedBox(height: 12),
@@ -236,6 +276,26 @@ class _StoreRow extends ConsumerWidget {
                     Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color)),
                   ],
                 ),
+                if (comparison.listingUrl != null) ...[
+                  const SizedBox(height: 4),
+                  InkWell(
+                    onTap: () => launchUrl(Uri.parse(comparison.listingUrl!), webOnlyWindowName: '_blank'),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View listing',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: ZenColors.matchaDark, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(Icons.open_in_new_rounded, size: 12, color: ZenColors.matchaDark),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
