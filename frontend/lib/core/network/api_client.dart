@@ -8,8 +8,13 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 15),
+      // Price-Finder's live search can wait up to 20s on SerpApi
+      // (live_price_service.py) before falling back to the seed catalog —
+      // this must stay comfortably above that or a slow-but-successful
+      // live search fails on the client side before the backend even
+      // finishes.
+      receiveTimeout: const Duration(seconds: 30),
     ),
   );
 
