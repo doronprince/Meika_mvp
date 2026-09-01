@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
+import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -9,6 +10,7 @@ from sqlalchemy import text
 from app.db.session import AsyncSessionLocal, engine
 from app.main import app
 from app.models.user import User
+from app.services.fx_service import FRANKFURTER_BASE_URL
 from tests.conftest import auth_headers
 
 EXPENSE_PAYLOAD = {
@@ -36,6 +38,15 @@ async def _db_reachable() -> bool:
             await conn.execute(text("SELECT 1"))
         return True
     except Exception:
+        return False
+
+
+async def _fx_api_reachable() -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{FRANKFURTER_BASE_URL}/latest", params={"from": "KRW"})
+            return response.status_code == 200
+    except httpx.HTTPError:
         return False
 
 
@@ -155,6 +166,49 @@ async def test_dashboard_summary_reflects_logged_expenses():
 
         assert len(body["clarity_score"]["factors"]) == 3
         assert 0 <= body["clarity_score"]["value"] <= 100
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+            await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_clarity_score_factor_prose_respects_preferred_currency():
+    """The factor `detail` strings are prose the backend generates, not a
+    numeric field the frontend converts itself -- this pins the fix for
+    that gap: they must render in the user's preferred_currency, not a
+    hardcoded ₩, once one is set."""
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+    if not await _fx_api_reachable():
+        pytest.skip("live FX API not reachable")
+
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    headers = auth_headers(user_id)
+    transport = ASGITransport(app=app)
+
+    try:
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            patch_response = await client.patch(
+                "/api/v1/users/me", json={"preferred_currency": "usd"}, headers=headers
+            )
+            assert patch_response.status_code == 200
+
+            create_response = await client.post("/api/v1/expenses", json=EXPENSE_PAYLOAD, headers=headers)
+            assert create_response.status_code == 201
+
+            response = await client.get("/api/v1/dashboard/summary", headers=headers)
+
+        assert response.status_code == 200
+        body = response.json()
+        details = " ".join(f["detail"] for f in body["clarity_score"]["factors"])
+        assert "$" in details
+        assert "₩" not in details
     finally:
         async with AsyncSessionLocal() as session:
             await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})

@@ -1,3 +1,4 @@
+import uuid
 from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import select
@@ -5,8 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.catalog import Product, ProductListing
+from app.models.user import User
 from app.schemas.common import PriceTrendResult, XAIFactor
 from app.schemas.price_finder import PriceFinderResult, StoreComparison
+from app.services.currency_display import DisplayCurrency, resolve_display_currency
 
 # A price move smaller than this is noise, not a trend — see
 # [[dashboard-projection-warmup]] for the same "don't overstate a small
@@ -54,7 +57,7 @@ def _build_comparison(listing: ProductListing) -> StoreComparison:
     )
 
 
-def _build_recommendation(comparisons: list[StoreComparison]) -> XAIFactor:
+def _build_recommendation(comparisons: list[StoreComparison], display: DisplayCurrency) -> XAIFactor:
     in_stock = [c for c in comparisons if c.in_stock] or comparisons
     cheapest_true_cost = min(in_stock, key=lambda c: c.true_economic_cost_krw)
     cheapest_sticker = min(in_stock, key=lambda c: c.price_krw)
@@ -63,9 +66,10 @@ def _build_recommendation(comparisons: list[StoreComparison]) -> XAIFactor:
         return XAIFactor(
             label=f"Best overall value: {cheapest_true_cost.store_name}",
             detail=(
-                f"{cheapest_true_cost.store_name} has both the lowest price (₩{cheapest_true_cost.price_krw:,.0f}) "
-                f"and the lowest True Economic Cost after ₩{cheapest_true_cost.transit_cost_krw:,.0f} transit: "
-                f"₩{cheapest_true_cost.true_economic_cost_krw:,.0f}."
+                f"{cheapest_true_cost.store_name} has both the lowest price "
+                f"({display.format(cheapest_true_cost.price_krw)}) "
+                f"and the lowest True Economic Cost after {display.format(cheapest_true_cost.transit_cost_krw)} "
+                f"transit: {display.format(cheapest_true_cost.true_economic_cost_krw)}."
             ),
             value=float(cheapest_true_cost.true_economic_cost_krw),
         )
@@ -74,17 +78,26 @@ def _build_recommendation(comparisons: list[StoreComparison]) -> XAIFactor:
     return XAIFactor(
         label=f"True cost beats sticker price: {cheapest_true_cost.store_name}",
         detail=(
-            f"{cheapest_sticker.store_name} looks cheapest at ₩{cheapest_sticker.price_krw:,.0f}, but after "
-            f"₩{cheapest_sticker.transit_cost_krw:,.0f} transit its True Economic Cost is "
-            f"₩{sticker_total_at_cheapest_sticker:,.0f}. {cheapest_true_cost.store_name} is actually lower "
-            f"overall at ₩{cheapest_true_cost.true_economic_cost_krw:,.0f} "
-            f"(₩{cheapest_true_cost.price_krw:,.0f} + ₩{cheapest_true_cost.transit_cost_krw:,.0f} transit)."
+            f"{cheapest_sticker.store_name} looks cheapest at {display.format(cheapest_sticker.price_krw)}, but "
+            f"after {display.format(cheapest_sticker.transit_cost_krw)} transit its True Economic Cost is "
+            f"{display.format(sticker_total_at_cheapest_sticker)}. {cheapest_true_cost.store_name} is actually "
+            f"lower overall at {display.format(cheapest_true_cost.true_economic_cost_krw)} "
+            f"({display.format(cheapest_true_cost.price_krw)} + "
+            f"{display.format(cheapest_true_cost.transit_cost_krw)} transit)."
         ),
         value=float(cheapest_true_cost.true_economic_cost_krw),
     )
 
 
-async def search_price_comparisons(db: AsyncSession, query: str | None) -> list[PriceFinderResult]:
+async def search_price_comparisons(
+    db: AsyncSession, query: str | None, user_id: uuid.UUID | None = None
+) -> list[PriceFinderResult]:
+    display = DisplayCurrency("KRW", Decimal("1"))
+    if user_id is not None:
+        user = await db.get(User, user_id)
+        if user is not None:
+            display = await resolve_display_currency(user.preferred_currency)
+
     stmt = (
         select(Product)
         .options(
@@ -112,7 +125,7 @@ async def search_price_comparisons(db: AsyncSession, query: str | None) -> list[
                 product_name=product.name,
                 category=product.category,
                 comparisons=comparisons,
-                recommendation=_build_recommendation(comparisons),
+                recommendation=_build_recommendation(comparisons, display),
             )
         )
     return results

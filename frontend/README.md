@@ -91,7 +91,8 @@ not a known app defect) — give it a look before relying on it for a demo.
   (`WidgetsBinding.instance.platformDispatcher.locale`); login never
   silently overrides an existing choice. The Add Expense form also accepts
   "paid in a foreign currency" — toggle it, pick the currency, and the
-  backend converts to KRW via a live rate at save time.
-  - Known gap: the *prose* inside Financial Clarity Score factors and
-    Price-Finder recommendations (generated server-side) still quotes KRW
-    verbatim — only the numeric fields around that text convert.
+  backend converts to KRW via a live rate at save time. The *prose* inside
+  Financial Clarity Score factors, Price-Finder recommendations, and
+  Copilot replies (all generated server-side) also renders in the
+  signed-in user's currency now, not just the numeric fields around it —
+  verified live in-browser.

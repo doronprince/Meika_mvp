@@ -15,10 +15,12 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.models.user import User
 from app.schemas.common import XAIFactor
 from app.schemas.dashboard import DashboardSummary
 from app.schemas.price_finder import PriceFinderResult
 from app.services import dashboard_service, price_finder_service
+from app.services.currency_display import DisplayCurrency, resolve_display_currency
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +36,18 @@ async def generate_reply(db: AsyncSession, user_id: uuid.UUID, user_message: str
 
     if settings.gemini_api_key and genai is not None:
         try:
-            content = await _generate_with_gemini(user_message, summary, price_result)
+            display = await _display_currency_for(db, user_id)
+            content = await _generate_with_gemini(user_message, summary, price_result, display)
             return content, factors
         except Exception:
             logger.exception("Gemini call failed; falling back to deterministic reply")
 
     return _deterministic_reply(summary, price_result), factors
+
+
+async def _display_currency_for(db: AsyncSession, user_id: uuid.UUID) -> DisplayCurrency:
+    user = await db.get(User, user_id)
+    return await resolve_display_currency(user.preferred_currency if user else None)
 
 
 async def _gather_context(
@@ -48,7 +56,7 @@ async def _gather_context(
     summary = await dashboard_service.get_dashboard_summary(db, user_id)
 
     lower = message.lower()
-    all_products = await price_finder_service.search_price_comparisons(db, None)
+    all_products = await price_finder_service.search_price_comparisons(db, None, user_id)
     matched = next(
         (p for p in all_products if p.product_name.split()[0].lower() in lower),
         None,
@@ -78,10 +86,13 @@ def _deterministic_reply(summary: DashboardSummary | None, price_result: PriceFi
 
 
 async def _generate_with_gemini(
-    message: str, summary: DashboardSummary | None, price_result: PriceFinderResult | None
+    message: str,
+    summary: DashboardSummary | None,
+    price_result: PriceFinderResult | None,
+    display: DisplayCurrency,
 ) -> str:
     client = genai.Client(api_key=settings.gemini_api_key)
-    prompt = _build_prompt(message, summary, price_result)
+    prompt = _build_prompt(message, summary, price_result, display)
     response = await client.aio.models.generate_content(model=settings.gemini_model, contents=prompt)
     text = (response.text or "").strip()
     if not text:
@@ -89,11 +100,17 @@ async def _generate_with_gemini(
     return text
 
 
-def _build_prompt(message: str, summary: DashboardSummary | None, price_result: PriceFinderResult | None) -> str:
+def _build_prompt(
+    message: str,
+    summary: DashboardSummary | None,
+    price_result: PriceFinderResult | None,
+    display: DisplayCurrency,
+) -> str:
     lines = [
         "You are Meika's Wise Guide, an explainable financial copilot for international students in Seoul.",
         "Answer the user's question in 2-3 short, warm sentences.",
         "Base your answer ONLY on the real numbers given below — never invent a number, price, or store name.",
+        f"Every figure below is already in the user's currency ({display.code}) — quote them as given, don't relabel or reconvert.",
         "",
         f"User question: {message}",
     ]
@@ -101,8 +118,8 @@ def _build_prompt(message: str, summary: DashboardSummary | None, price_result: 
     if summary:
         lines += [
             "",
-            f"This month: spent ₩{summary.total_spent_this_month_krw:,.0f} of a "
-            f"₩{summary.monthly_budget_krw:,.0f} budget (day {summary.days_elapsed_this_month} of "
+            f"This month: spent {display.format(summary.total_spent_this_month_krw)} of a "
+            f"{display.format(summary.monthly_budget_krw)} budget (day {summary.days_elapsed_this_month} of "
             f"{summary.days_in_month}).",
             f"Financial Clarity Score: {summary.clarity_score.value}/100 "
             f"({summary.clarity_score.risk_level.value} risk).",
@@ -115,8 +132,8 @@ def _build_prompt(message: str, summary: DashboardSummary | None, price_result: 
         lines.append(f"Price comparison for {price_result.product_name}:")
         for c in price_result.comparisons:
             lines.append(
-                f"- {c.store_name}: ₩{c.price_krw:,.0f} + ₩{c.transit_cost_krw:,.0f} transit = "
-                f"₩{c.true_economic_cost_krw:,.0f} true cost ({c.price_trend.value})"
+                f"- {c.store_name}: {display.format(c.price_krw)} + {display.format(c.transit_cost_krw)} transit = "
+                f"{display.format(c.true_economic_cost_krw)} true cost ({c.price_trend.value})"
             )
         lines.append(f"Recommendation: {price_result.recommendation.detail}")
 

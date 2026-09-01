@@ -12,6 +12,7 @@ from app.models.expense import Expense
 from app.models.user import User
 from app.schemas.common import RiskLevel, XAIFactor
 from app.schemas.dashboard import CategoryBreakdownItem, ClarityScore, DashboardSummary
+from app.services.currency_display import DisplayCurrency, resolve_display_currency
 
 # Below this many days of data, a projected month-end spend swings wildly on
 # a single purchase (see [[dashboard-projection-warmup]]) — the factor is
@@ -32,6 +33,7 @@ async def get_dashboard_summary(
     if user is None:
         return None
 
+    display = await resolve_display_currency(user.preferred_currency)
     today = today or date.today()
     first_of_month = date(today.year, today.month, 1)
     days_in_month = calendar.monthrange(today.year, today.month)[1]
@@ -81,6 +83,7 @@ async def get_dashboard_summary(
         category_breakdown=category_breakdown,
         projected_month_end_spend=projected_month_end_spend,
         projected_overage=projected_overage,
+        display=display,
     )
 
     return DashboardSummary(
@@ -107,6 +110,7 @@ def _compute_clarity_score(
     category_breakdown: list[CategoryBreakdownItem],
     projected_month_end_spend: Decimal | None,
     projected_overage: Decimal | None,
+    display: DisplayCurrency,
 ) -> ClarityScore:
     factors: list[XAIFactor] = []
     penalty = Decimal("0")
@@ -130,7 +134,7 @@ def _compute_clarity_score(
             XAIFactor(
                 label="On pace with budget" if pace_penalty == 0 else "Spending ahead of even pace",
                 detail=(
-                    f"Spent ₩{total_spent:,.0f} of an expected ₩{expected_to_date:,.0f} "
+                    f"Spent {display.format(total_spent)} of an expected {display.format(expected_to_date)} "
                     f"by day {days_elapsed} of {days_in_month} "
                     f"({pace_ratio * 100:.0f}% of even-pace budget){warmup_note}."
                 ),
@@ -163,10 +167,10 @@ def _compute_clarity_score(
             XAIFactor(
                 label="Projected to exceed budget" if overage > 0 else "Projected to stay within budget",
                 detail=(
-                    f"At the current pace of ₩{spending_velocity:,.0f}/day, "
-                    f"projected month-end spend is ₩{projected_month_end_spend:,.0f} against a "
-                    f"₩{monthly_budget:,.0f} budget"
-                    + (f" (projected overage: ₩{overage:,.0f})." if overage > 0 else ".")
+                    f"At the current pace of {display.format(spending_velocity)}/day, "
+                    f"projected month-end spend is {display.format(projected_month_end_spend)} against a "
+                    f"{display.format(monthly_budget)} budget"
+                    + (f" (projected overage: {display.format(overage)})." if overage > 0 else ".")
                 ),
                 value=float(projected_month_end_spend),
             )
@@ -188,7 +192,7 @@ def _compute_clarity_score(
                 else "Spending is concentrated in one category",
                 detail=(
                     f"{top.category.value.replace('_', ' ').title()} accounts for {top_share * 100:.0f}% of this "
-                    f"month's spend (₩{top.total_krw:,.0f} of ₩{total_spent:,.0f}){warmup_note}."
+                    f"month's spend ({display.format(top.total_krw)} of {display.format(total_spent)}){warmup_note}."
                 ),
                 value=float(top_share * 100),
             )
