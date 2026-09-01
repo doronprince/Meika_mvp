@@ -5,12 +5,14 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from app.ai import copilot_service
+from app.core.config import settings
 from app.db.session import AsyncSessionLocal, engine
 from app.main import app
 from app.models.enums import ChatRole
 from app.models.user import User
 from app.services import chat_service
 from tests.conftest import auth_headers
+from tests.test_live_price_service import _FakeAsyncClient
 
 
 async def _db_reachable() -> bool:
@@ -143,4 +145,101 @@ async def test_generate_reply_answers_a_product_question_with_real_comparison():
             await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
             await session.execute(text("DELETE FROM products WHERE id = :id"), {"id": product_id})
             await session.execute(text("DELETE FROM stores WHERE id = :id"), {"id": store_id})
+            await session.commit()
+
+
+@pytest.mark.parametrize(
+    "message,expected",
+    [
+        ("How much do wireless headphones cost?", True),
+        ("What's the price of a laptop?", True),
+        ("Is this a good buy?", True),
+        ("How is my budget doing this month?", False),
+        ("Thanks!", False),
+    ],
+)
+def test_looks_like_price_question(message, expected):
+    assert copilot_service._looks_like_price_question(message) is expected
+
+
+@pytest.mark.parametrize(
+    "message,expected_query",
+    [
+        ("How much do wireless headphones cost?", "wireless headphones"),
+        ("What is the price of a laptop?", "a laptop"),
+        ("how much does a bicycle cost", "a bicycle"),
+    ],
+)
+def test_extract_product_query(message, expected_query):
+    assert copilot_service._extract_product_query(message) == expected_query
+
+
+@pytest.mark.asyncio
+async def test_generate_reply_falls_back_to_budget_when_live_search_unavailable():
+    """No catalog match and no SERPAPI_API_KEY (disabled for tests by the
+    autouse fixture) -- must fall back to the budget answer, never crash or
+    fabricate a price for a product it can't actually look up."""
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    try:
+        async with AsyncSessionLocal() as session:
+            content, factors = await copilot_service.generate_reply(
+                session, user_id, "How much do wireless headphones cost?"
+            )
+
+        assert "Financial Clarity Score" in content
+        assert len(factors) == 3
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+            await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_generate_reply_uses_live_search_when_catalog_has_no_match(monkeypatch):
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+
+    monkeypatch.setattr(settings, "serpapi_api_key", "fake-test-key")
+    _FakeAsyncClient.payload = {
+        "shopping_results": [
+            {
+                "title": "Test Wireless Headphones Pro",
+                "source": "Test Electronics Store",
+                "extracted_price": 49.99,
+                "rating": 4.3,
+                "product_link": "https://example.com/listing/headphones",
+            },
+        ]
+    }
+    import app.services.live_price_service as live_price_service
+
+    monkeypatch.setattr(live_price_service.httpx, "AsyncClient", _FakeAsyncClient)
+
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    try:
+        async with AsyncSessionLocal() as session:
+            content, factors = await copilot_service.generate_reply(
+                session, user_id, "How much do wireless headphones cost?"
+            )
+
+        assert content.startswith("Live result —")
+        assert "Test Wireless Headphones Pro" in content
+        assert "Test Electronics Store" in content
+        assert len(factors) == 1
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
             await session.commit()

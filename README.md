@@ -162,6 +162,14 @@ emulator vs. iOS simulator vs. physical device).
     (`tests/conftest.py`) disables `serpapi_api_key` for every test: the
     parsing logic itself is verified with a mocked HTTP client instead
     (`tests/test_live_price_service.py`).
+- [x] **Copilot uses live search too** — a price question that doesn't
+      match the seeded catalog (`app/ai/copilot_service.py`'s
+      `_looks_like_price_question` / `_extract_product_query`) falls
+      through to the same live SerpApi search Price-Finder uses, sharing
+      its quota. Only fires when the message actually looks like a price
+      question — not on every message — to keep casual chat from silently
+      burning through the 100/month free tier. The reply is prefixed
+      "Live result —" so it's clear which source answered.
 - [ ] **Real payment processing** — explicitly not built with raw
       card/account storage under any circumstance (a PCI-DSS violation
       waiting to happen). The only path is a real processor (Stripe or

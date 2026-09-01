@@ -81,7 +81,11 @@ worldwide instead of just the 5-item seed catalog — see the root README's
   the box with `GEMINI_API_KEY` unset (the backend falls back to a
   deterministic reply grounded in the same real numbers); set the key to get
   Gemini-phrased replies instead — that path hasn't been exercised against a
-  real key yet.
+  real key yet. Ask a price question about something outside the 5-item
+  seed catalog ("how much do wireless headphones cost?") and it falls
+  through to the same live SerpApi search Price-Finder uses, sharing its
+  quota — the reply is prefixed "Live result —" so the source is clear.
+  Verified live in-browser: a real TVCMall headphone listing at €7.51.
 
 **Known gap:** the JWT is in-memory only, so the app signs you out on every
 restart. Verified end-to-end via curl/live-WebSocket against the real
