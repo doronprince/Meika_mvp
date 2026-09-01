@@ -9,6 +9,8 @@ class Expense {
   final double transitCostKrw;
   final DateTime occurredOn;
   final double totalEconomicCostKrw;
+  final String? originalCurrency;
+  final double? originalAmount;
 
   const Expense({
     required this.id,
@@ -19,6 +21,8 @@ class Expense {
     required this.transitCostKrw,
     required this.occurredOn,
     required this.totalEconomicCostKrw,
+    required this.originalCurrency,
+    required this.originalAmount,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -31,6 +35,8 @@ class Expense {
       transitCostKrw: parseAmount(json['transit_cost_krw']),
       occurredOn: DateTime.parse(json['occurred_on'] as String),
       totalEconomicCostKrw: parseAmount(json['total_economic_cost_krw']),
+      originalCurrency: json['original_currency'] as String?,
+      originalAmount: json['original_amount'] == null ? null : parseAmount(json['original_amount']),
     );
   }
 }

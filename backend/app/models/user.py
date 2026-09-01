@@ -15,6 +15,11 @@ if TYPE_CHECKING:
 # default can never drift apart.
 DEFAULT_MONTHLY_BUDGET_KRW = Decimal("600000.00")
 
+# Every amount is stored in KRW regardless of preferred_currency — this is
+# purely a display preference read by GET /fx/rates callers. See
+# [[fx-conversion-is-display-only]].
+DEFAULT_PREFERRED_CURRENCY = "KRW"
+
 
 class User(UUIDPKMixin, TimestampMixin, Base):
     __tablename__ = "users"
@@ -27,6 +32,14 @@ class User(UUIDPKMixin, TimestampMixin, Base):
         Numeric(12, 2),
         default=DEFAULT_MONTHLY_BUDGET_KRW,
         server_default=str(DEFAULT_MONTHLY_BUDGET_KRW),
+        nullable=False,
+    )
+    # ISO 4217 code (e.g. "USD", "EUR"). Display-only — see
+    # [[fx-conversion-is-display-only]] guardrail in app/services/fx_service.py.
+    preferred_currency: Mapped[str] = mapped_column(
+        String(3),
+        default=DEFAULT_PREFERRED_CURRENCY,
+        server_default=DEFAULT_PREFERRED_CURRENCY,
         nullable=False,
     )
 

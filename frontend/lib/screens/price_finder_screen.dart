@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/format/currency.dart';
 import '../core/theme/zen_theme.dart';
 import '../data/models/price_finder_result.dart';
+import '../providers/currency_providers.dart';
 import '../providers/price_finder_providers.dart';
 import '../widgets/async_value_view.dart';
 import '../widgets/bounded_content.dart';
@@ -174,7 +174,7 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
-class _StoreRow extends StatelessWidget {
+class _StoreRow extends ConsumerWidget {
   final StoreComparison comparison;
 
   const _StoreRow({required this.comparison});
@@ -193,7 +193,7 @@ class _StoreRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final (icon, color, label) = _trendVisual;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -243,11 +243,11 @@ class _StoreRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                formatKrw(comparison.trueEconomicCostKrw),
+                formatKrwForDisplay(ref, comparison.trueEconomicCostKrw),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
               Text(
-                '${formatKrw(comparison.priceKrw)} + ${formatKrw(comparison.transitCostKrw)} transit',
+                '${formatKrwForDisplay(ref, comparison.priceKrw)} + ${formatKrwForDisplay(ref, comparison.transitCostKrw)} transit',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.55)),
               ),
             ],

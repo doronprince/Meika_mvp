@@ -1,14 +1,33 @@
 import uuid
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
+from app.services import fx_service
+
+_CENTS = Decimal("0.01")
+
+
+class UnsupportedCurrencyError(Exception):
+    pass
 
 
 async def create_expense(db: AsyncSession, user_id: uuid.UUID, data: ExpenseCreate) -> Expense:
-    expense = Expense(user_id=user_id, **data.model_dump())
+    payload = data.model_dump(exclude={"foreign_amount", "foreign_currency"})
+
+    if data.foreign_amount is not None:
+        currency = data.foreign_currency.upper()
+        if currency not in fx_service.SUPPORTED_CURRENCIES:
+            raise UnsupportedCurrencyError(f"{currency} is not a supported currency")
+        converted = await fx_service.convert(data.foreign_amount, currency, "KRW")
+        payload["amount_krw"] = converted.quantize(_CENTS, rounding=ROUND_HALF_UP)
+        payload["original_currency"] = currency
+        payload["original_amount"] = data.foreign_amount
+
+    expense = Expense(user_id=user_id, **payload)
     db.add(expense)
     await db.commit()
     await db.refresh(expense)

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user_id
 from app.db.session import get_db
 from app.schemas.expense import ExpenseCreate, ExpenseRead, ExpenseUpdate
-from app.services import expense_service
+from app.services import expense_service, fx_service
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -17,7 +17,12 @@ async def create_expense(
     db: AsyncSession = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ) -> ExpenseRead:
-    expense = await expense_service.create_expense(db, user_id, payload)
+    try:
+        expense = await expense_service.create_expense(db, user_id, payload)
+    except expense_service.UnsupportedCurrencyError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc))
+    except fx_service.FxRateUnavailableError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
     return ExpenseRead.model_validate(expense)
 
 

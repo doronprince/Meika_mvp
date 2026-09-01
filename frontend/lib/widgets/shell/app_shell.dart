@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_token_provider.dart';
 import '../../core/theme/zen_theme.dart';
+import '../../providers/currency_providers.dart';
 import '../../screens/budget_screen.dart';
 import '../../screens/copilot_screen.dart';
 import '../../screens/dashboard_screen.dart';
 import '../../screens/price_finder_screen.dart';
+import '../currency_picker.dart';
 import '../enso_mark.dart';
 
 class AppShell extends ConsumerStatefulWidget {
@@ -53,6 +55,12 @@ class _AppShellState extends ConsumerState<AppShell> {
           ],
         ),
         actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.currency_exchange_rounded, size: 18),
+            label: Text(ref.watch(preferredCurrencyProvider)),
+            style: TextButton.styleFrom(foregroundColor: ZenColors.sumi),
+            onPressed: () => showCurrencyPicker(context, ref),
+          ),
           IconButton(
             icon: const Icon(Icons.logout_rounded),
             tooltip: 'Log out',

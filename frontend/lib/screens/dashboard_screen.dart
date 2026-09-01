@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/format/currency.dart';
 import '../core/theme/risk_colors.dart';
 import '../core/theme/zen_theme.dart';
 import '../data/models/dashboard_summary.dart';
+import '../providers/currency_providers.dart';
 import '../providers/dashboard_providers.dart';
 import '../widgets/async_value_view.dart';
 import '../widgets/bounded_content.dart';
@@ -133,18 +133,19 @@ class _FactorRow extends StatelessWidget {
   }
 }
 
-class _BudgetSnapshotCard extends StatelessWidget {
+class _BudgetSnapshotCard extends ConsumerWidget {
   final DashboardSummary summary;
 
   const _BudgetSnapshotCard({required this.summary});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ratio = summary.monthlyBudgetKrw > 0
         ? (summary.totalSpentThisMonthKrw / summary.monthlyBudgetKrw).clamp(0.0, 1.0)
         : 0.0;
     final overBudget = summary.remainingBudgetKrw < 0;
     final barColor = overBudget ? RiskColors.high : (ratio > 0.85 ? RiskColors.moderate : RiskColors.low);
+    String money(num v) => formatKrwForDisplay(ref, v);
 
     return Card(
       child: Padding(
@@ -157,9 +158,9 @@ class _BudgetSnapshotCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(formatKrw(summary.totalSpentThisMonthKrw),
+                Text(money(summary.totalSpentThisMonthKrw),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                Text('of ${formatKrw(summary.monthlyBudgetKrw)}',
+                Text('of ${money(summary.monthlyBudgetKrw)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.6))),
               ],
             ),
@@ -176,8 +177,8 @@ class _BudgetSnapshotCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               overBudget
-                  ? '${formatKrw(-summary.remainingBudgetKrw)} over budget'
-                  : '${formatKrw(summary.remainingBudgetKrw)} remaining',
+                  ? '${money(-summary.remainingBudgetKrw)} over budget'
+                  : '${money(summary.remainingBudgetKrw)} remaining',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: barColor, fontWeight: FontWeight.w600),
             ),
             Text(
@@ -191,15 +192,16 @@ class _BudgetSnapshotCard extends StatelessWidget {
   }
 }
 
-class _VelocityCard extends StatelessWidget {
+class _VelocityCard extends ConsumerWidget {
   final DashboardSummary summary;
 
   const _VelocityCard({required this.summary});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final projected = summary.projectedMonthEndSpendKrw;
     final overage = summary.projectedOverageKrw ?? 0;
+    String money(num v) => formatKrwForDisplay(ref, v);
 
     return Card(
       child: Padding(
@@ -211,7 +213,7 @@ class _VelocityCard extends StatelessWidget {
             const SizedBox(height: 12),
             _StatLine(
               label: 'Spending velocity',
-              value: '${formatKrw(summary.spendingVelocityKrwPerDay)} / day',
+              value: '${money(summary.spendingVelocityKrwPerDay)} / day',
             ),
             const SizedBox(height: 8),
             if (projected == null)
@@ -220,12 +222,12 @@ class _VelocityCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.6)),
               )
             else ...[
-              _StatLine(label: 'Projected month-end spend', value: formatKrw(projected)),
+              _StatLine(label: 'Projected month-end spend', value: money(projected)),
               if (overage > 0) ...[
                 const SizedBox(height: 8),
                 _StatLine(
                   label: 'Projected overage',
-                  value: formatKrw(overage),
+                  value: money(overage),
                   valueColor: RiskColors.high,
                 ),
               ],
@@ -259,13 +261,13 @@ class _StatLine extends StatelessWidget {
   }
 }
 
-class _CategoryBreakdownCard extends StatelessWidget {
+class _CategoryBreakdownCard extends ConsumerWidget {
   final List<CategoryBreakdownItem> items;
 
   const _CategoryBreakdownCard({required this.items});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -290,7 +292,7 @@ class _CategoryBreakdownCard extends StatelessWidget {
                           children: [
                             Text(item.category.displayName, style: Theme.of(context).textTheme.bodyMedium),
                             Text(
-                              formatKrw(item.totalKrw),
+                              formatKrwForDisplay(ref, item.totalKrw),
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                             ),
                           ],

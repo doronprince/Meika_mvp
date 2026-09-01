@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../core/format/currency.dart';
 import '../core/theme/risk_colors.dart';
 import '../core/theme/zen_theme.dart';
 import '../data/models/dashboard_summary.dart';
 import '../data/models/expense.dart';
 import '../data/models/expense_category.dart';
+import '../providers/currency_providers.dart';
 import '../providers/dashboard_providers.dart';
 import '../widgets/async_value_view.dart';
 import '../widgets/bounded_content.dart';
+import 'add_expense_screen.dart';
 
 class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
@@ -20,29 +21,45 @@ class BudgetScreen extends ConsumerWidget {
     final summary = ref.watch(dashboardSummaryProvider);
     final expenses = ref.watch(expenseListProvider);
 
-    return RefreshIndicator(
-      color: ZenColors.matcha,
-      onRefresh: () async {
-        ref.invalidate(dashboardSummaryProvider);
-        ref.invalidate(expenseListProvider);
-      },
-      child: AsyncValueView<DashboardSummary>(
-        value: summary,
-        onRetry: () => ref.invalidate(dashboardSummaryProvider),
-        builder: (context, data) => BoundedContent(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              _CashFlowRiskCard(summary: data),
-              const SizedBox(height: 16),
-              Text('Expense History', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              AsyncValueView<List<Expense>>(
-                value: expenses,
-                onRetry: () => ref.invalidate(expenseListProvider),
-                builder: (context, items) => _ExpenseHistoryList(expenses: items),
-              ),
-            ],
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: ZenColors.matcha,
+        foregroundColor: Colors.white,
+        onPressed: () async {
+          final saved = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+          );
+          if (saved == true) {
+            ref.invalidate(dashboardSummaryProvider);
+            ref.invalidate(expenseListProvider);
+          }
+        },
+        child: const Icon(Icons.add_rounded),
+      ),
+      body: RefreshIndicator(
+        color: ZenColors.matcha,
+        onRefresh: () async {
+          ref.invalidate(dashboardSummaryProvider);
+          ref.invalidate(expenseListProvider);
+        },
+        child: AsyncValueView<DashboardSummary>(
+          value: summary,
+          onRetry: () => ref.invalidate(dashboardSummaryProvider),
+          builder: (context, data) => BoundedContent(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+              children: [
+                _CashFlowRiskCard(summary: data),
+                const SizedBox(height: 16),
+                Text('Expense History', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                AsyncValueView<List<Expense>>(
+                  value: expenses,
+                  onRetry: () => ref.invalidate(expenseListProvider),
+                  builder: (context, items) => _ExpenseHistoryList(expenses: items),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -50,20 +67,21 @@ class BudgetScreen extends ConsumerWidget {
   }
 }
 
-class _CashFlowRiskCard extends StatelessWidget {
+class _CashFlowRiskCard extends ConsumerWidget {
   final DashboardSummary summary;
 
   const _CashFlowRiskCard({required this.summary});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = RiskColors.forLevel(summary.clarityScore.riskLevel);
     final velocity = summary.spendingVelocityKrwPerDay;
     final remaining = summary.remainingBudgetKrw;
+    String money(num v) => formatKrwForDisplay(ref, v);
 
     String outlook;
     if (remaining <= 0) {
-      outlook = 'Monthly budget already exceeded by ${formatKrw(-remaining)}.';
+      outlook = 'Monthly budget already exceeded by ${money(-remaining)}.';
     } else if (velocity <= 0) {
       outlook = 'No spending recorded yet — budget fully available.';
     } else {
@@ -102,12 +120,12 @@ class _CashFlowRiskCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _MiniStat(label: 'Velocity', value: '${formatKrw(velocity)}/day'),
+                  child: _MiniStat(label: 'Velocity', value: '${money(velocity)}/day'),
                 ),
                 Expanded(
                   child: _MiniStat(
                     label: remaining >= 0 ? 'Remaining' : 'Over budget',
-                    value: formatKrw(remaining.abs()),
+                    value: money(remaining.abs()),
                     color: remaining < 0 ? RiskColors.high : null,
                   ),
                 ),
@@ -152,7 +170,7 @@ class _ExpenseHistoryList extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            'No expenses logged yet. They\'ll show up here as soon as you add one.',
+            'No expenses logged yet. Tap + to add your first one.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.6)),
           ),
         ),
@@ -175,7 +193,7 @@ class _ExpenseHistoryList extends StatelessWidget {
   }
 }
 
-class _ExpenseTile extends StatelessWidget {
+class _ExpenseTile extends ConsumerWidget {
   final Expense expense;
 
   const _ExpenseTile({required this.expense});
@@ -202,7 +220,16 @@ class _ExpenseTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subtitleParts = [
+      expense.category.displayName,
+      if (expense.storeName != null) expense.storeName!,
+      DateFormat.MMMd().format(expense.occurredOn),
+    ];
+    if (expense.originalCurrency != null) {
+      subtitleParts.add('paid in ${expense.originalCurrency}');
+    }
+
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: ZenColors.matchaLight,
@@ -210,15 +237,9 @@ class _ExpenseTile extends StatelessWidget {
         child: Icon(_icon, size: 20),
       ),
       title: Text(expense.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(
-        [
-          expense.category.displayName,
-          if (expense.storeName != null) expense.storeName!,
-          DateFormat.MMMd().format(expense.occurredOn),
-        ].join(' · '),
-      ),
+      subtitle: Text(subtitleParts.join(' · ')),
       trailing: Text(
-        formatKrw(expense.totalEconomicCostKrw),
+        formatKrwForDisplay(ref, expense.totalEconomicCostKrw),
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
     );

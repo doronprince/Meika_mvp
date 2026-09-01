@@ -50,4 +50,13 @@ class Expense(UUIDPKMixin, TimestampMixin, Base):
     occurred_on: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     notes: Mapped[str | None] = mapped_column(Text)
 
+    # Set only when the expense was entered in a non-KRW currency — amount_krw
+    # above is still the canonical, always-populated field every computation
+    # (dashboard, price-finder) reads. These two are the audit trail: the
+    # original figure and the live FX rate snapshotted at entry time, so a
+    # past expense's KRW value never drifts as rates move later. Both null
+    # together means "entered directly in KRW" (the common case).
+    original_currency: Mapped[str | None] = mapped_column(String(3))
+    original_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+
     user: Mapped["User"] = relationship(back_populates="expenses")

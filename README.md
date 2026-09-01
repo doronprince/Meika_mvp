@@ -123,6 +123,32 @@ emulator vs. iOS simulator vs. physical device).
         secure storage yet). Treat this as a solid MVP baseline, not an
         audit sign-off.
 
+## Beyond the 8 phases
+
+- [x] **Manual expense entry** — an Add Expense screen (FAB on Budget) wired
+      to the existing `POST /expenses`, so real spending replaces the seed
+      script as the source of truth for a signed-in user.
+- [x] **Multi-currency** — `GET /fx/rates` serves live rates (ECB via
+      api.frankfurter.dev, 1hr cache). Every amount is still *stored* in
+      KRW (source of truth); display converts to the signed-in user's
+      `preferred_currency` (`GET/PATCH /users/me`), defaulted from device
+      locale on first registration, overridable any time via the currency
+      picker in the app bar. Log an expense in a foreign currency and the
+      backend snapshots the live rate at entry time (`expenses.original_currency`
+      / `original_amount`) so a past expense's KRW value never drifts as
+      rates move later.
+  - Known gap: the Financial Clarity Score / Price-Finder recommendation
+    *prose* (the XAI factor `detail` text) still quotes KRW verbatim, since
+    it's generated server-side from the real computation — only the
+    numeric display fields around it convert. Fixing that means either
+    generating that prose per-currency or converting inline within it;
+    out of scope for this pass.
+- [ ] **Real payment processing** — explicitly not built with raw
+      card/account storage under any circumstance (a PCI-DSS violation
+      waiting to happen). The only path is a real processor (Stripe or
+      similar) with proper tokenization, which needs the project owner's
+      own test-mode API keys — blocked pending that.
+
 ## Guardrails
 
 - **Tenant isolation:** every user-owned table carries `user_id`; every query

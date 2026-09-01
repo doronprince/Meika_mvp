@@ -1,5 +1,6 @@
 import uuid
 
+import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -7,6 +8,7 @@ from sqlalchemy import text
 from app.db.session import AsyncSessionLocal, engine
 from app.main import app
 from app.models.user import User
+from app.services.fx_service import FRANKFURTER_BASE_URL
 from tests.conftest import auth_headers
 
 VALID_PAYLOAD = {
@@ -25,6 +27,15 @@ async def _db_reachable() -> bool:
             await conn.execute(text("SELECT 1"))
         return True
     except Exception:
+        return False
+
+
+async def _fx_api_reachable() -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{FRANKFURTER_BASE_URL}/latest", params={"from": "KRW"})
+            return response.status_code == 200
+    except httpx.HTTPError:
         return False
 
 
@@ -66,6 +77,72 @@ async def test_create_expense_rejects_unknown_category():
         response = await client.post("/api/v1/expenses", json=payload, headers=auth_headers(uuid.uuid4()))
 
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_expense_rejects_neither_amount_source():
+    payload = {k: v for k, v in VALID_PAYLOAD.items() if k != "amount_krw"}
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post("/api/v1/expenses", json=payload, headers=auth_headers(uuid.uuid4()))
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_expense_rejects_both_amount_sources():
+    payload = {**VALID_PAYLOAD, "foreign_amount": "10", "foreign_currency": "usd"}
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post("/api/v1/expenses", json=payload, headers=auth_headers(uuid.uuid4()))
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_expense_rejects_unsupported_foreign_currency():
+    payload = {k: v for k, v in VALID_PAYLOAD.items() if k != "amount_krw"}
+    payload.update(foreign_amount="10", foreign_currency="xxx")
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post("/api/v1/expenses", json=payload, headers=auth_headers(uuid.uuid4()))
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_expense_with_foreign_currency_converts_via_live_rate():
+    if not await _db_reachable():
+        pytest.skip("database not reachable")
+    if not await _fx_api_reachable():
+        pytest.skip("live FX API not reachable")
+
+    async with AsyncSessionLocal() as session:
+        user = User(email=f"{uuid.uuid4()}@example.com", hashed_password="test-hash")
+        session.add(user)
+        await session.commit()
+        user_id = user.id
+
+    headers = auth_headers(user_id)
+    payload = {k: v for k, v in VALID_PAYLOAD.items() if k != "amount_krw"}
+    payload.update(foreign_amount="10.00", foreign_currency="usd")
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/api/v1/expenses", json=payload, headers=headers)
+
+        assert response.status_code == 201
+        body = response.json()
+        assert body["original_currency"] == "USD"
+        assert float(body["original_amount"]) == 10.0
+        # $10 should be somewhere in the thousands of KRW, not equal to the
+        # raw figure -- proves a real conversion happened, not a passthrough.
+        assert float(body["amount_krw"]) > 1000
+    finally:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+            await session.commit()
 
 
 @pytest.mark.asyncio

@@ -79,3 +79,19 @@ restart. Verified end-to-end via curl/live-WebSocket against the real
 backend and `flutter analyze`; the login flow itself hasn't been
 screenshot-verified in-browser this session (a Browser-pane display issue,
 not a known app defect) — give it a look before relying on it for a demo.
+
+- **Add Expense** — a FAB on the Budget screen opens a form (title,
+  category, amount, store, date, notes) posting to `POST /expenses`. Verified
+  live in-browser.
+- **Multi-currency display** — a currency chip in the app bar (e.g. "USD")
+  opens a picker over every currency `GET /fx/rates` supports. Every KRW
+  figure across Dashboard, Budget, and Price-Finder converts live using real
+  exchange rates — verified live in-browser switching between USD/EUR/KRW.
+  A fresh registration defaults to the device locale's currency
+  (`WidgetsBinding.instance.platformDispatcher.locale`); login never
+  silently overrides an existing choice. The Add Expense form also accepts
+  "paid in a foreign currency" — toggle it, pick the currency, and the
+  backend converts to KRW via a live rate at save time.
+  - Known gap: the *prose* inside Financial Clarity Score factors and
+    Price-Finder recommendations (generated server-side) still quotes KRW
+    verbatim — only the numeric fields around that text convert.
