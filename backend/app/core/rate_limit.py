@@ -7,11 +7,16 @@ Redis-backed limiter before ever running more than one worker.
 """
 
 import time
+import weakref
 from collections import defaultdict, deque
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+
+# Every live limiter, so tests can start each case with empty buckets.
+# Weak so a discarded app's middleware stack isn't kept alive by this.
+_instances: "weakref.WeakSet[RateLimitMiddleware]" = weakref.WeakSet()
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -21,6 +26,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._auth_limit = auth_limit
         self._window_seconds = window_seconds
         self._hits: dict[str, deque] = defaultdict(deque)
+        _instances.add(self)
 
     async def dispatch(self, request: Request, call_next):
         client_ip = request.client.host if request.client else "unknown"
@@ -38,3 +44,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         hits.append(now)
         return await call_next(request)
+
+    def reset(self) -> None:
+        self._hits.clear()
+
+
+def reset_rate_limits() -> None:
+    """Clear every limiter's sliding windows.
+
+    httpx's ASGITransport reports every test request as the same client IP,
+    so without this the whole suite shares one bucket and whichever test
+    happens to run past the 60th request in a minute gets a spurious 429.
+    """
+    for instance in list(_instances):
+        instance.reset()
