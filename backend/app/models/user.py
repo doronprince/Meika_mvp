@@ -9,6 +9,7 @@ from app.models.base import Base, TimestampMixin, UUIDPKMixin
 if TYPE_CHECKING:
     from app.models.chat import ChatMessage
     from app.models.expense import Expense
+    from app.models.income import IncomeStream
 
 # Default monthly budget threshold (KRW) applied to a new user until they set
 # their own. Lives here, once, so the migration's server_default and the ORM
@@ -42,6 +43,11 @@ class User(UUIDPKMixin, TimestampMixin, Base):
         server_default=DEFAULT_PREFERRED_CURRENCY,
         nullable=False,
     )
+    # Cash and instantly withdrawable balances, in KRW. Nullable on purpose:
+    # NULL means "not told us", which the survival runway must not treat as
+    # zero savings.
+    liquid_savings_krw: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
 
     expenses: Mapped[list["Expense"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     chat_messages: Mapped[list["ChatMessage"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    income_streams: Mapped[list["IncomeStream"]] = relationship(back_populates="user", cascade="all, delete-orphan")

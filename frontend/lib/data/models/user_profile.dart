@@ -7,12 +7,16 @@ class UserProfile {
   final double monthlyBudgetKrw;
   final String preferredCurrency;
 
+  /// Null means the user hasn't told us, which is not the same as zero.
+  final double? liquidSavingsKrw;
+
   const UserProfile({
     required this.id,
     required this.email,
     required this.fullName,
     required this.monthlyBudgetKrw,
     required this.preferredCurrency,
+    this.liquidSavingsKrw,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -22,6 +26,7 @@ class UserProfile {
       fullName: json['full_name'] as String?,
       monthlyBudgetKrw: parseAmount(json['monthly_budget_krw']),
       preferredCurrency: json['preferred_currency'] as String,
+      liquidSavingsKrw: json['liquid_savings_krw'] == null ? null : parseAmount(json['liquid_savings_krw']),
     );
   }
 }

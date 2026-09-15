@@ -39,3 +39,12 @@ def enum_values(py_enum: type[enum.Enum]) -> list[str]:
 class GoalType(str, enum.Enum):
     SAVINGS = "savings"
     SPENDING_CAP = "spending_cap"
+
+
+class IncomeKind(str, enum.Enum):
+    SALARY = "salary"
+    PART_TIME = "part_time"
+    FREELANCE = "freelance"
+    SCHOLARSHIP = "scholarship"
+    FAMILY_SUPPORT = "family_support"
+    OTHER = "other"

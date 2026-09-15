@@ -2,6 +2,21 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "meika-backend",
+      "cwd": "backend",
+      "runtimeExecutable": "D:\\Doron\\Meika_mvp\\backend\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    },
+    {
       "name": "meika-frontend",
       "cwd": "frontend",
       "runtimeExecutable": "flutter",
@@ -14,6 +29,34 @@
         "--dart-define=MEIKA_WS_BASE_URL=ws://localhost:8000/ws"
       ],
       "port": 8080
+    },
+    {
+      "name": "meika-backend-research",
+      "cwd": "backend",
+      "runtimeExecutable": "D:/Doron/Meika_mvp/backend/.venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8001"
+      ],
+      "port": 8001
+    },
+    {
+      "name": "meika-web-research",
+      "cwd": "frontend/build/web_research",
+      "runtimeExecutable": "D:/Doron/Meika_mvp/backend/.venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3000",
+        "--bind",
+        "127.0.0.1"
+      ],
+      "port": 3000
     }
   ]
 }
