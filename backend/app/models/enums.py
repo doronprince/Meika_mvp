@@ -34,3 +34,8 @@ def enum_values(py_enum: type[enum.Enum]) -> list[str]:
     """DB-stored values for a str Enum, in declaration order. Single source of
     truth shared between ORM column definitions and the Alembic migration."""
     return [member.value for member in py_enum]
+
+
+class GoalType(str, enum.Enum):
+    SAVINGS = "savings"
+    SPENDING_CAP = "spending_cap"

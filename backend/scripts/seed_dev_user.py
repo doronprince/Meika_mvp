@@ -3,8 +3,8 @@ testing against the [[tenant-isolation]] guardrail. Logs in through the real
 Phase 8 JWT auth flow (POST /api/v1/auth/login) with the credentials printed
 below — there's no more X-User-Id shortcut.
 
-Idempotent: re-running replaces the dev user's expenses with a fresh batch
-dated relative to today, so dashboard metrics (spending velocity, projected
+Idempotent: re-running replaces the dev user's expenses and goals with a
+fresh batch dated relative to today, so dashboard metrics (spending velocity, projected
 month-end spend) always reflect "this month" regardless of when it's run.
 
 Usage:
@@ -21,8 +21,9 @@ from sqlalchemy import delete, select
 
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
-from app.models.enums import ExpenseCategory, TransitMode
+from app.models.enums import ExpenseCategory, GoalType, TransitMode
 from app.models.expense import Expense
+from app.models.goal import Goal, GoalContribution
 from app.models.user import User
 
 DEV_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
@@ -44,6 +45,14 @@ SAMPLE_EXPENSES = [
 ]
 
 
+# A savings goal 20 days in, saving slightly too slowly (lands "at risk": a
+# ~23% pace increase closes the gap), so the demo shows a real counterfactual.
+SAVINGS_GOAL_STARTED_DAYS_AGO = 20
+SAVINGS_GOAL_DAYS_LEFT = 40
+# (days_ago, amount_krw)
+SAMPLE_CONTRIBUTIONS = [(20, "40000"), (13, "40000"), (6, "40000")]
+
+
 async def seed() -> None:
     today = date.today()
 
@@ -57,6 +66,8 @@ async def seed() -> None:
             user.hashed_password = hash_password(DEV_USER_PASSWORD)
 
         await session.execute(delete(Expense).where(Expense.user_id == DEV_USER_ID))
+        # Contributions cascade with their goal.
+        await session.execute(delete(Goal).where(Goal.user_id == DEV_USER_ID))
 
         for days_ago, title, category, amount, store_name, transit_cost, transit_mode in SAMPLE_EXPENSES:
             occurred_on = today - timedelta(days=days_ago)
@@ -77,11 +88,46 @@ async def seed() -> None:
                 )
             )
 
+        savings = Goal(
+            user_id=DEV_USER_ID,
+            name="Winter trip to Jeju",
+            goal_type=GoalType.SAVINGS,
+            target_amount_krw=Decimal("450000"),
+            starting_amount_krw=Decimal("50000"),
+            start_date=today - timedelta(days=SAVINGS_GOAL_STARTED_DAYS_AGO),
+            target_date=today + timedelta(days=SAVINGS_GOAL_DAYS_LEFT),
+        )
+        session.add(savings)
+        await session.flush()
+        for days_ago, amount in SAMPLE_CONTRIBUTIONS:
+            session.add(
+                GoalContribution(
+                    user_id=DEV_USER_ID,
+                    goal_id=savings.id,
+                    amount_krw=Decimal(amount),
+                    contributed_on=today - timedelta(days=days_ago),
+                )
+            )
+
+        # A café cap over the current calendar month, fed by the expenses above.
+        next_month = date(today.year + (today.month == 12), today.month % 12 + 1, 1)
+        session.add(
+            Goal(
+                user_id=DEV_USER_ID,
+                name="Cafés this month",
+                goal_type=GoalType.SPENDING_CAP,
+                target_amount_krw=Decimal("80000"),
+                category=ExpenseCategory.CAFES_AND_DINING,
+                start_date=date(today.year, today.month, 1),
+                target_date=next_month - timedelta(days=1),
+            )
+        )
+
         await session.commit()
 
         count = await session.execute(select(Expense).where(Expense.user_id == DEV_USER_ID))
         n = len(count.scalars().all())
-        print(f"Seeded dev user {DEV_USER_ID} ({DEV_USER_EMAIL}) with {n} expenses this month.")
+        print(f"Seeded dev user {DEV_USER_ID} ({DEV_USER_EMAIL}) with {n} expenses this month and 2 goals.")
         print(f"Log in with: email={DEV_USER_EMAIL}  password={DEV_USER_PASSWORD}")
 
 

@@ -170,6 +170,28 @@ emulator vs. iOS simulator vs. physical device).
       question — not on every message — to keep casual chat from silently
       burning through the 100/month free tier. The reply is prefixed
       "Live result —" so it's clear which source answered.
+- [x] **Explainable goal forecasting** — Review-1 Objectives 3 & 4. A
+      Goals tab for savings targets (fed by logged contributions, plus an
+      optional amount already saved) and spending caps (fed by real
+      expenses including transit, optionally one category), backed by
+      `/goals`. Every read recomputes a verdict — on track / at risk / off
+      track / achieved / missed / too early to tell — in
+      `app/services/goal_forecast.py`, a pure function with no DB access.
+      It ships with the factors behind the verdict and a counterfactual:
+      the exact daily rate that lands on target and how far the current
+      pace is from it. "At risk" means a pace change of at most 25% closes
+      the gap, so the verdict and its explanation can't disagree. Under 7
+      days of history the projection is withheld, the same warm-up rule as
+      the dashboard.
+  - **Measured, not claimed:** `python -m scripts.eval_goal_forecast`
+    (from `backend/`) backtests the production function on 1,000 seeded
+    synthetic ledgers against two baselines (no further progress; last
+    7 days' pace), point-in-time, reporting MAE and outcome accuracy per
+    behaviour profile. Honest reading: it's best on steady and lumpy
+    savers. Recent-pace wins once behaviour shifts (stall / ramp / decay),
+    and before day ~21 the "no further progress" baseline's outcome
+    accuracy beats both, because only a third of goals are met. The data
+    is synthetic, not real users.
 - [ ] **Real payment processing** — explicitly not built with raw
       card/account storage under any circumstance (a PCI-DSS violation
       waiting to happen). The only path is a real processor (Stripe or

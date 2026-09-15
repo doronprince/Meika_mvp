@@ -7,6 +7,7 @@ import '../../providers/currency_providers.dart';
 import '../../screens/budget_screen.dart';
 import '../../screens/copilot_screen.dart';
 import '../../screens/dashboard_screen.dart';
+import '../../screens/goals_screen.dart';
 import '../../screens/price_finder_screen.dart';
 import '../currency_picker.dart';
 import '../enso_mark.dart';
@@ -25,14 +26,16 @@ class _AppShellState extends ConsumerState<AppShell> {
     DashboardScreen(),
     PriceFinderScreen(),
     BudgetScreen(),
+    GoalsScreen(),
     CopilotScreen(),
   ];
 
-  static const _labels = ['Dashboard', 'Price-Finder', 'Budget', 'Copilot'];
+  static const _labels = ['Dashboard', 'Price-Finder', 'Budget', 'Goals', 'Copilot'];
   static const _icons = [
     Icons.grid_view_rounded,
     Icons.search_rounded,
     Icons.pie_chart_outline_rounded,
+    Icons.flag_outlined,
     Icons.forum_outlined,
   ];
 

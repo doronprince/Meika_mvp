@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
-from app.routers import auth, chat, dashboard, expense, fx, health, price_finder, users, ws_copilot
+from app.routers import auth, chat, dashboard, expense, fx, goals, health, price_finder, users, ws_copilot
 
 
 @asynccontextmanager
@@ -45,6 +45,7 @@ def create_application() -> FastAPI:
     application.include_router(users.router, prefix=settings.api_v1_prefix)
     application.include_router(expense.router, prefix=settings.api_v1_prefix)
     application.include_router(dashboard.router, prefix=settings.api_v1_prefix)
+    application.include_router(goals.router, prefix=settings.api_v1_prefix)
     application.include_router(price_finder.router, prefix=settings.api_v1_prefix)
     application.include_router(fx.router, prefix=settings.api_v1_prefix)
     application.include_router(chat.router, prefix=settings.api_v1_prefix)

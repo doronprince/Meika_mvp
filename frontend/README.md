@@ -109,3 +109,11 @@ not a known app defect) — give it a look before relying on it for a demo.
   Copilot replies (all generated server-side) also renders in the
   signed-in user's currency now, not just the numeric fields around it —
   verified live in-browser.
+- **Goals** — a Goals tab lists savings goals and spending caps. Each card
+  shows its server-computed verdict chip, progress, pace, projected finish,
+  the daily rate needed, and the factors behind the verdict. "New goal" opens
+  a form, and amounts are typed in the display currency and converted to
+  KRW. Savings goals have "Log contribution" (a negative amount records a
+  withdrawal). The list and the demo account's goals were verified live
+  in-browser; the create and contribution dialogs were checked by
+  `flutter analyze` and backend tests, not by clicking through.
