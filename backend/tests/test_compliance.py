@@ -231,3 +231,17 @@ async def test_tax_question_never_reaches_gemini_and_ends_with_referral(monkeypa
         assert "not a statement about the law" in reply or "doesn't know the law" in reply
     finally:
         await _delete_users(user_id)
+
+
+def test_tax_reply_answers_about_the_topic_asked():
+    from types import SimpleNamespace
+
+    flags = [
+        SimpleNamespace(rule_key="undocumented_deduction_candidates"),
+        SimpleNamespace(rule_key="foreign_remittance_rolling_year"),
+    ]
+    asked_about_transfers = copilot_service._pick_tax_flag(flags, "Do I need to declare the money I remit home?")
+    assert asked_about_transfers.rule_key == "foreign_remittance_rolling_year"
+    # No topic in the question: the most severe flag (first) answers.
+    general = copilot_service._pick_tax_flag(flags, "Anything tax-wise I should know about?")
+    assert general.rule_key == "undocumented_deduction_candidates"

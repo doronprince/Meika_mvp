@@ -45,7 +45,7 @@ async def generate_reply(db: AsyncSession, user_id: uuid.UUID, user_message: str
     # asserted something about the law doesn't repair it, and no prompt
     # instruction is a guarantee; this branch makes the guarantee structural.
     if _looks_like_tax_question(user_message):
-        return await _tax_reply(db, user_id)
+        return await _tax_reply(db, user_id, user_message)
 
     summary, price_result = await _gather_context(db, user_id, user_message)
     factors = _extract_factors(summary, price_result)
@@ -87,7 +87,30 @@ def _looks_like_tax_question(message: str) -> bool:
     return bool(_TAX_QUESTION_PATTERN.search(message))
 
 
-async def _tax_reply(db: AsyncSession, user_id: uuid.UUID) -> tuple[str, list[XAIFactor]]:
+# Which flag answers which kind of tax question. Matched against the message
+# before falling back to the most severe flag, so "do I need to declare my
+# remittances?" is answered about transfers, not about receipts.
+_TAX_TOPICS = {
+    "foreign_remittance_rolling_year": ("remit", "transfer", "send money", "sent money", "wire", "abroad", "home"),
+    "large_single_transfer": ("remit", "transfer", "wire"),
+    "undocumented_deduction_candidates": ("receipt", "deduct", "document", "proof"),
+    "education_spend_fiscal_year": ("tuition", "education", "school", "universit", "course"),
+    "foreign_currency_footprint": ("currenc", "residen", "foreign", "countr"),
+    "fiscal_boundary_commitments": ("rent", "subscription", "recurring", "year end", "fiscal"),
+}
+
+
+def _pick_tax_flag(flags: list, message: str):
+    """The most severe flag whose topic the question mentions, else the most
+    severe flag overall. `flags` arrive sorted by severity."""
+    lower = message.lower()
+    return next(
+        (f for f in flags if any(word in lower for word in _TAX_TOPICS.get(f.rule_key, ()))),
+        flags[0],
+    )
+
+
+async def _tax_reply(db: AsyncSession, user_id: uuid.UUID, message: str) -> tuple[str, list[XAIFactor]]:
     """Deterministic, and always ends on the professional-referral factor —
     the same wording the Foresight tab shows."""
     foresight = await compliance_service.get_foresight(db, user_id)
@@ -95,7 +118,7 @@ async def _tax_reply(db: AsyncSession, user_id: uuid.UUID) -> tuple[str, list[XA
         return "I don't have an account to reason about yet — log an expense first so I have real numbers to work with.", []
 
     if foresight.flags:
-        top = foresight.flags[0]
+        top = _pick_tax_flag(foresight.flags, message)
         observed = top.factors[0].detail
         text = (
             f"{top.question} {observed} That's arithmetic on the spending you logged, compared against a figure "
