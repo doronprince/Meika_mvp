@@ -92,17 +92,16 @@ async def test_register_login_and_use_token_round_trip():
 @pytest.mark.asyncio
 async def test_login_rate_limit_kicks_in_after_configured_threshold():
     """Sliding-window limiter on /auth/* — see app/core/config.py's
-    auth_rate_limit_per_minute (10 by default). Doesn't need the DB: a 401
-    for bad credentials still counts against the limit."""
+    auth_rate_limit_per_minute (10 by default). Doesn't need the DB: the
+    empty body fails validation (422) before any user lookup, and a rejected
+    request still counts against the limit."""
     from app.core.config import settings
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         statuses = []
         for _ in range(settings.auth_rate_limit_per_minute + 3):
-            response = await client.post(
-                "/api/v1/auth/login", json={"email": "nobody@example.com", "password": "whatever"}
-            )
+            response = await client.post("/api/v1/auth/login", json={})
             statuses.append(response.status_code)
 
     assert 429 in statuses
