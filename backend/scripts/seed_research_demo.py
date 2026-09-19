@@ -74,9 +74,18 @@ def build_ledger(today: date) -> list[Expense]:
             store = rng.choice(["Emart Yeoksam", "Homeplus Jamsil", "Lotte Mart"])
             rows.append(_expense(day, "Groceries", ExpenseCategory.GROCERIES, rng.randint(10, 25) * 1000, store,
                                  1350, TransitMode.SUBWAY_BUS))
-        if rng.random() < 0.6:
+        # The last 28 days drift the way the early-warning module looks for:
+        # coffee becomes near daily and cheaper per cup, impulse online
+        # shopping appears, and a weekly webtoon habit started 6 weeks ago.
+        drifting = day > today - timedelta(days=28)
+        if rng.random() < (0.95 if drifting else 0.6):
             store = rng.choice(["Cafe Onion", "Starbucks Gangnam", "Mega Coffee"])
-            rows.append(_expense(day, "Coffee", ExpenseCategory.CAFES_AND_DINING, rng.randint(45, 90) * 100, store))
+            cup = rng.randint(30, 55) * 100 if drifting else rng.randint(45, 90) * 100
+            rows.append(_expense(day, "Coffee", ExpenseCategory.CAFES_AND_DINING, cup, store))
+        if drifting and rng.random() < 0.12:
+            rows.append(_expense(day, "Online shopping", ExpenseCategory.APPAREL, rng.randint(20, 60) * 1000, "Musinsa"))
+        if day.weekday() == 6 and day > today - timedelta(days=42):
+            rows.append(_expense(day, "Webtoon coins", ExpenseCategory.OTHER, 4_900, "Naver Webtoon"))
         if day.weekday() == 5 and rng.random() < 0.7:
             rows.append(_expense(day, "Dinner with friends", ExpenseCategory.CAFES_AND_DINING,
                                  rng.randint(15, 35) * 1000, "Hongdae BBQ", 1350, TransitMode.SUBWAY_BUS))

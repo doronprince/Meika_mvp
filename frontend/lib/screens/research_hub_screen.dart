@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/zen_theme.dart';
 import '../widgets/bounded_content.dart';
 import 'survival_screen.dart';
+import 'vulnerability_screen.dart';
 
 /// Entry point for the research modules that look ahead of the user's
 /// current numbers. A module without a working screen is listed as in
@@ -30,10 +31,11 @@ class ResearchHubScreen extends StatelessWidget {
             subtitle: 'How long your savings last when several shocks hit at once, and which one does the damage.',
             builder: (_) => const SurvivalScreen(),
           ),
-          const _ModuleTile(
+          _ModuleTile(
             icon: Icons.sensors_rounded,
             title: 'Early warning',
             subtitle: 'Leading signs of financial strain, before they show up in your budget.',
+            builder: (_) => const VulnerabilityScreen(),
           ),
           const _ModuleTile(
             icon: Icons.receipt_long_outlined,
