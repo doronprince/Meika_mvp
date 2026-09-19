@@ -48,3 +48,11 @@ class IncomeKind(str, enum.Enum):
     SCHOLARSHIP = "scholarship"
     FAMILY_SUPPORT = "family_support"
     OTHER = "other"
+
+
+class ExposureKind(str, enum.Enum):
+    SOCIAL_FEED = "social_feed"
+    SHOPPING_APP = "shopping_app"
+    INFLUENCER_CONTENT = "influencer_content"
+    ADS_AND_DEAL_ALERTS = "ads_and_deal_alerts"
+    OTHER = "other"

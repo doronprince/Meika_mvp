@@ -9,6 +9,7 @@ from app.models.base import Base, TimestampMixin, UUIDPKMixin
 if TYPE_CHECKING:
     from app.models.chat import ChatMessage
     from app.models.expense import Expense
+    from app.models.exposure import ExposureSession
     from app.models.income import IncomeStream
 
 # Default monthly budget threshold (KRW) applied to a new user until they set
@@ -51,3 +52,4 @@ class User(UUIDPKMixin, TimestampMixin, Base):
     expenses: Mapped[list["Expense"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     chat_messages: Mapped[list["ChatMessage"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     income_streams: Mapped[list["IncomeStream"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    exposure_sessions: Mapped[list["ExposureSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")

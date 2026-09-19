@@ -25,8 +25,9 @@ from sqlalchemy import delete
 
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
-from app.models.enums import ExpenseCategory, IncomeKind, TransitMode
+from app.models.enums import ExpenseCategory, ExposureKind, IncomeKind, TransitMode
 from app.models.expense import Expense
+from app.models.exposure import ExposureSession
 from app.models.income import IncomeStream
 from app.models.user import User
 from app.services import fx_service
@@ -99,6 +100,40 @@ def build_ledger(today: date) -> list[Expense]:
     return rows
 
 
+EXPOSURE_DAYS = 60
+# (platform, kind) the demo account logs screen time on.
+PLATFORMS = [
+    ("Instagram", ExposureKind.SOCIAL_FEED),
+    ("Coupang", ExposureKind.SHOPPING_APP),
+    ("YouTube", ExposureKind.INFLUENCER_CONTENT),
+]
+
+
+def build_exposure(today: date) -> tuple[list[ExposureSession], list[Expense]]:
+    """Demo screen-time log for the exposure module, with a pattern built
+    in on purpose: after a long session on a shopping app or influencer
+    content, an online purchase often follows the same or next day. This
+    is constructed demo data so the screen has something to find; the
+    module's real-world behaviour is measured in scripts/eval_exposure.py."""
+    rng = random.Random(20260919)
+    sessions: list[ExposureSession] = []
+    purchases: list[Expense] = []
+    for offset in range(EXPOSURE_DAYS):
+        day = today - timedelta(days=EXPOSURE_DAYS - 1 - offset)
+        if rng.random() < 0.3:
+            continue
+        platform, kind = rng.choice(PLATFORMS)
+        minutes = rng.choice([15, 20, 30, 45, 60, 90, 120, 150])
+        sessions.append(
+            ExposureSession(user_id=DEMO_USER_ID, occurred_on=day, started_hour=rng.choice([13, 21, 22, 23]),
+                            platform=platform, kind=kind, minutes=minutes)
+        )
+        if kind != ExposureKind.SOCIAL_FEED and minutes >= 90 and rng.random() < 0.75:
+            when = min(today, day + timedelta(days=rng.choice([0, 1])))
+            purchases.append(_expense(when, "Online order", ExpenseCategory.APPAREL, rng.randint(25, 70) * 1000, platform))
+    return sessions, purchases
+
+
 async def seed() -> None:
     today = date.today()
 
@@ -116,6 +151,7 @@ async def seed() -> None:
 
         await session.execute(delete(IncomeStream).where(IncomeStream.user_id == DEMO_USER_ID))
         await session.execute(delete(Expense).where(Expense.user_id == DEMO_USER_ID))
+        await session.execute(delete(ExposureSession).where(ExposureSession.user_id == DEMO_USER_ID))
 
         for label, kind, amount, currency in INCOME_STREAMS:
             if currency == "KRW":
@@ -138,11 +174,15 @@ async def seed() -> None:
             )
 
         ledger = build_ledger(today)
+        exposure, prompted = build_exposure(today)
+        ledger += prompted
         session.add_all(ledger)
+        session.add_all(exposure)
         await session.commit()
 
     print(f"Seeded research demo user {DEMO_USER_ID} ({DEMO_USER_EMAIL}): {len(ledger)} expenses over "
           f"{HISTORY_DAYS} days, liquid savings {LIQUID_SAVINGS_KRW:,.0f} KRW.")
+    print(f"Plus {len(exposure)} logged screen-time sessions over the last {EXPOSURE_DAYS} days.")
     print(f"Log in with: email={DEMO_USER_EMAIL}  password={DEMO_USER_PASSWORD}")
 
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/zen_theme.dart';
 import '../widgets/bounded_content.dart';
+import 'exposure_screen.dart';
 import 'survival_screen.dart';
 import 'vulnerability_screen.dart';
 
@@ -42,10 +43,11 @@ class ResearchHubScreen extends StatelessWidget {
             title: 'Tax & compliance foresight',
             subtitle: 'Spending today that could become a tax or reporting question months from now.',
           ),
-          const _ModuleTile(
+          _ModuleTile(
             icon: Icons.phone_iphone_rounded,
             title: 'Exposure & spending',
             subtitle: 'Whether time on shopping feeds lines up with spending spikes, with a nudge before they happen.',
+            builder: (_) => const ExposureScreen(),
           ),
           const _ModuleTile(
             icon: Icons.fact_check_outlined,

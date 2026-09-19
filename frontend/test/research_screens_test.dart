@@ -10,13 +10,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meika/data/models/exposure.dart';
 import 'package:meika/data/models/income_stream.dart';
 import 'package:meika/data/models/survival_report.dart';
 import 'package:meika/data/models/user_profile.dart';
 import 'package:meika/data/models/vulnerability_report.dart';
+import 'package:meika/data/repositories/exposure_repository.dart';
 import 'package:meika/data/repositories/vulnerability_repository.dart';
 import 'package:meika/providers/currency_providers.dart';
 import 'package:meika/providers/survival_providers.dart';
+import 'package:meika/screens/exposure_screen.dart';
 import 'package:meika/screens/research_hub_screen.dart';
 import 'package:meika/screens/survival_screen.dart';
 import 'package:meika/screens/vulnerability_screen.dart';
@@ -139,5 +142,40 @@ void main() {
     await tester.tap(find.text('Early warning'));
     await tester.pumpAndSettle();
     expect(find.text('Early-warning pressure'), findsOneWidget);
+  });
+
+  List<Override> exposureOverrides(String insightsFixture) => [
+        ...commonOverrides(),
+        exposureInsightsProvider.overrideWith(
+          (ref) async => ExposureInsightReport.fromJson(fixture(insightsFixture) as Map<String, dynamic>),
+        ),
+        exposureSessionsProvider.overrideWith(
+          (ref) async => (fixture('exposure_sessions') as List)
+              .map((s) => ExposureSessionEntry.fromJson(s as Map<String, dynamic>))
+              .toList(),
+        ),
+      ];
+
+  testWidgets('exposure renders the association, effect and exploratory breakdown', (tester) async {
+    final report = ExposureInsightReport.fromJson(fixture('exposure_insights') as Map<String, dynamic>);
+    await pumpScreen(tester, const ExposureScreen(), exposureOverrides('exposure_insights'));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(report.associationFound ? 'Screen time lines up with your spending' : 'No clear link found'),
+        findsWidgets);
+    expect(find.text('Exploratory breakdown'), findsOneWidget);
+    expect(find.text('Recent screen time'), findsOneWidget);
+    if (report.effect != null) {
+      expect(find.text('Discretionary spending that day and the next'), findsOneWidget);
+    }
+    expect(find.text(report.intervention.triggered ? 'Pause before you buy' : 'No nudge today'), findsWidgets);
+  });
+
+  testWidgets('exposure with too little data reports that instead of a correlation', (tester) async {
+    await pumpScreen(tester, const ExposureScreen(), exposureOverrides('exposure_insufficient'));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Not enough data yet'), findsOneWidget);
+    expect(find.text('Exploratory breakdown'), findsNothing);
   });
 }
