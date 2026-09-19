@@ -192,6 +192,44 @@ emulator vs. iOS simulator vs. physical device).
     and before day ~21 the "no further progress" baseline's outcome
     accuracy beats both, because only a third of goals are met. The data
     is synthetic, not real users.
+- [x] **Tax & compliance foresight** (research question: *what financial
+      event today could create a tax or compliance problem months later?*)
+      — Foresight tab → "Tax & compliance foresight", backed by
+      `/compliance/*`. Six rules live as data in
+      `app/data/compliance_rules.json` (transfers home over a rolling
+      year, one large transfer, education/housing costs without a receipt,
+      education spend this tax year, spending in several currencies,
+      regular payments running past the tax-year end). They run on four
+      pure detectors (`app/services/compliance_detectors.py`), and every
+      flag is a *possible* question: its explanation names the assumed
+      figure, where that figure came from, the arithmetic, what Meika can't
+      see, and it always ends with a referral to a qualified professional.
+      There is deliberately no aggregate "compliance score". Users can
+      change any figure, mark it as checked with a professional, turn a
+      rule off, set their tax year and country, and tick receipts. The
+      Copilot never sends a tax question to Gemini; it answers from the
+      same deterministic result.
+  - **Measured:** `python -m scripts.eval_compliance_foresight` (from
+    `backend/`) replays 100 seeded synthetic 18-month ledgers against a
+    threshold-only baseline (lead time 0). At the shipped constants:
+    78.5% of crossings get a warning in advance, a median 31.5 days
+    early, with 9.7% false alarms and 91.6% precision on "reaches it
+    before the tax year ends" claims. All 444 sampled verdicts are
+    reproducible from their published explanation, and 8,193 generated
+    strings contain 0 assertive-law phrases. The band constants were set
+    by a selection rule fixed in advance. No speculative "watch" setting
+    kept false alarms at or under 10% (32–43% with it on), so it ships
+    switched off.
+  - **Honest limits:** the range around a projected crossing date covered
+    the real date only 48% of the time (23% on thin history), so treat it
+    as a rough range, not a confidence interval. The tax-year rules
+    false-alarm a lot (31–57%) because semester tuition is lumpy and the
+    pace model is linear. The data is synthetic and every figure is an
+    unverified assumption; the eval validates the detectors, not the
+    figures. The design's comprehension study needs human participants
+    and wasn't run.
+  - Demo account with 14 months of history: `python -m
+    scripts.seed_tax_demo` → `tax@meika.example` / `MeikaTax123!`.
 - [ ] **Real payment processing** — explicitly not built with raw
       card/account storage under any circumstance (a PCI-DSS violation
       waiting to happen). The only path is a real processor (Stripe or

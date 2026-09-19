@@ -1,0 +1,105 @@
+{
+  "version": "2026-09-19",
+  "rules": [
+    {
+      "rule_key": "foreign_remittance_rolling_year",
+      "detector_kind": "threshold_accumulation",
+      "title": "Money sent abroad over 12 months",
+      "question": "Could the money you've logged as sent abroad in the last 12 months add up to a figure some countries ask people to report?",
+      "amount_basis": "amount_only",
+      "match": {
+        "text_regex": "\\b(remit\\w*|wire transfer|money transfer|international transfer|western union|moneygram|wise)\\b|송금"
+      },
+      "match_description": "transactions whose title, store or notes mention a remittance, a wire or money transfer, Wise, Western Union, MoneyGram or 송금",
+      "params": {"window_mode": "rolling_days", "window_days": 365},
+      "threshold": {
+        "amount_krw": "13500000",
+        "basis": {"amount": "10000", "currency": "USD", "krw_per_unit": "1350", "rate_as_of": "2026-01-01"}
+      },
+      "assumption_statement": "Meika assumes a figure of USD 10,000 sent abroad within 12 months.",
+      "verification_prompt": "Ask a tax professional where you live whether any reporting rule applies to money you send abroad, and at what amount.",
+      "source_note": "USD 10,000 appears as a reporting figure in several countries' rules, which is the only reason it is used here as a placeholder. Meika does not know whether it applies to you.",
+      "max_severity": "high"
+    },
+    {
+      "rule_key": "large_single_transfer",
+      "detector_kind": "single_line_threshold",
+      "title": "One large transfer abroad",
+      "question": "Is any single transfer abroad you've logged large enough that it might be worth asking about?",
+      "amount_basis": "amount_only",
+      "match": {
+        "text_regex": "\\b(remit\\w*|wire transfer|money transfer|international transfer|western union|moneygram|wise)\\b|송금"
+      },
+      "match_description": "transactions whose title, store or notes mention a remittance, a wire or money transfer, Wise, Western Union, MoneyGram or 송금",
+      "params": {"window_days": 365},
+      "threshold": {
+        "amount_krw": "4050000",
+        "basis": {"amount": "3000", "currency": "USD", "krw_per_unit": "1350", "rate_as_of": "2026-01-01"}
+      },
+      "assumption_statement": "Meika assumes a figure of USD 3,000 for a single transfer.",
+      "verification_prompt": "Ask a tax professional whether a single large transfer abroad needs any paperwork where you live.",
+      "source_note": "USD 3,000 is a round cut-off with no external basis. It is only here so one unusually large transfer gets a second look.",
+      "max_severity": "high"
+    },
+    {
+      "rule_key": "undocumented_deduction_candidates",
+      "detector_kind": "threshold_accumulation",
+      "title": "Education and housing costs with no receipt recorded",
+      "question": "Are you building up education or housing costs this tax year without a receipt recorded for them?",
+      "amount_basis": "amount_only",
+      "match": {"categories": ["education", "housing_and_utilities"]},
+      "match_description": "Education or Housing & Utilities expenses in this tax year that you haven't marked as having a receipt",
+      "params": {"window_mode": "fiscal_ytd", "window_days": 365, "documentation_filter": "undocumented_only"},
+      "threshold": {"amount_krw": "1000000"},
+      "assumption_statement": "Meika assumes ₩1,000,000 of such costs without a receipt is worth a look.",
+      "verification_prompt": "Ask a tax professional whether any of these costs could matter for your return, and which records you would need to keep.",
+      "source_note": "₩1,000,000 is a round cut-off with no external basis. Some countries let people claim education or housing costs; whether yours does, and which records it asks for, Meika does not know.",
+      "max_severity": "high"
+    },
+    {
+      "rule_key": "education_spend_fiscal_year",
+      "detector_kind": "threshold_accumulation",
+      "title": "Education spending this tax year",
+      "question": "Could your education spending this tax year reach a level where it's worth asking how it's treated?",
+      "amount_basis": "amount_only",
+      "match": {"categories": ["education"]},
+      "match_description": "Education expenses in this tax year",
+      "params": {"window_mode": "fiscal_ytd", "window_days": 365},
+      "threshold": {"amount_krw": "5000000"},
+      "assumption_statement": "Meika assumes ₩5,000,000 of education spending in one tax year is worth a question.",
+      "verification_prompt": "Ask a tax professional whether education costs are treated in any special way where you file.",
+      "source_note": "₩5,000,000 is a round cut-off with no external basis.",
+      "max_severity": "high"
+    },
+    {
+      "rule_key": "foreign_currency_footprint",
+      "detector_kind": "currency_footprint",
+      "title": "Spending in several currencies",
+      "question": "Does your spending in several currencies over the past year form a pattern worth mentioning to an adviser?",
+      "amount_basis": "amount_only",
+      "match": {},
+      "match_description": "expenses logged in a currency other than KRW",
+      "params": {"window_days": 365, "min_distinct_currencies": 2, "min_foreign_share": "0.25", "min_months_spanned": 3},
+      "threshold": null,
+      "assumption_statement": "Meika treats spending in 2 or more foreign currencies, making up at least 25% of your spending, across at least 3 months, as a pattern.",
+      "verification_prompt": "Ask a tax professional whether spending in several countries says anything about where you are treated as resident. That usually depends on days present, which Meika cannot see.",
+      "source_note": "These cut-offs are arbitrary: 2 is the smallest number that makes 'several currencies' true, 3 months separates a holiday from a pattern, and 25% has no external basis.",
+      "max_severity": "moderate"
+    },
+    {
+      "rule_key": "fiscal_boundary_commitments",
+      "detector_kind": "recurring_boundary",
+      "title": "Regular payments that run past the tax year end",
+      "question": "Do any of your regular payments continue past the end of this tax year, so part of the cost lands in the next one?",
+      "amount_basis": "amount_only",
+      "match": {},
+      "match_description": "still-active payments that repeat at least 3 times at a regular interval (grouped by category and exact store or title)",
+      "params": {"min_occurrences": 3, "interval_tolerance_days": 5, "min_annual_krw": "1200000"},
+      "threshold": null,
+      "assumption_statement": "Meika treats regular payments worth ₩1,200,000 or more a year as worth mentioning.",
+      "verification_prompt": "Ask a tax professional whether it matters which tax year a regular payment falls in.",
+      "source_note": "₩1,200,000 a year (₩100,000 a month) is a round cut-off with no external basis. Meika sees payment dates, not what period each payment covers.",
+      "max_severity": "moderate"
+    }
+  ]
+}

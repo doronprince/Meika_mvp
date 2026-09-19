@@ -1,0 +1,81 @@
+{
+  "as_of": "2026-09-19",
+  "flags": [],
+  "suppressed": [
+    {
+      "rule_key": "foreign_remittance_rolling_year",
+      "title": "Money sent abroad over 12 months",
+      "reason": "no_ledger",
+      "detail": "You haven't logged any expenses yet, so there is nothing to compare.",
+      "days_observed": null,
+      "days_required": null
+    },
+    {
+      "rule_key": "large_single_transfer",
+      "title": "One large transfer abroad",
+      "reason": "no_ledger",
+      "detail": "You haven't logged any expenses yet, so there is nothing to compare.",
+      "days_observed": null,
+      "days_required": null
+    },
+    {
+      "rule_key": "undocumented_deduction_candidates",
+      "title": "Education and housing costs with no receipt recorded",
+      "reason": "no_ledger",
+      "detail": "You haven't logged any expenses yet, so there is nothing to compare.",
+      "days_observed": null,
+      "days_required": null
+    },
+    {
+      "rule_key": "education_spend_fiscal_year",
+      "title": "Education spending this tax year",
+      "reason": "no_ledger",
+      "detail": "You haven't logged any expenses yet, so there is nothing to compare.",
+      "days_observed": null,
+      "days_required": null
+    },
+    {
+      "rule_key": "foreign_currency_footprint",
+      "title": "Spending in several currencies",
+      "reason": "no_ledger",
+      "detail": "You haven't logged any expenses yet, so there is nothing to compare.",
+      "days_observed": null,
+      "days_required": null
+    },
+    {
+      "rule_key": "fiscal_boundary_commitments",
+      "title": "Regular payments that run past the tax year end",
+      "reason": "no_ledger",
+      "detail": "You haven't logged any expenses yet, so there is nothing to compare.",
+      "days_observed": null,
+      "days_required": null
+    }
+  ],
+  "counts": {
+    "high": 0,
+    "moderate": 0,
+    "low": 0,
+    "rules_evaluated": 6,
+    "rules_suppressed": 6
+  },
+  "coverage": {
+    "expense_count": 0,
+    "first_day": null,
+    "ledger_days": 0,
+    "cannot_see": [
+      "income or salary",
+      "bank balances or where accounts are held",
+      "investments or other assets",
+      "transfers you didn't log",
+      "the days you spent in any country"
+    ]
+  },
+  "fiscal_window": {
+    "start": "2026-01-01",
+    "end": "2026-12-31",
+    "days_remaining": 103,
+    "is_default": true
+  },
+  "disclaimer": "Meika is not a tax adviser and does not know the law anywhere. Everything below is arithmetic on the expenses you logged, compared against figures you can and should change. Treat each item as a question to bring to a qualified professional, never as an answer.",
+  "rules_version": "2026-09-19"
+}

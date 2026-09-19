@@ -1,0 +1,389 @@
+{
+  "seed": 20260910,
+  "ledgers": 100,
+  "days": 540,
+  "check_every_days": 7,
+  "shipped_bands": {
+    "watch_horizon_multiplier": "0",
+    "early_ledger_low_ratio": "1.0",
+    "fallback_rate_band": "0.25"
+  },
+  "selection_rule": "largest multiplier / smallest early ratio with LOW-or-above false-alarm rate <= 0.1",
+  "selected": {
+    "watch_horizon_multiplier": "0",
+    "watch_target_met": false,
+    "early_ledger_low_ratio": "1.0",
+    "early_target_met": false,
+    "fallback_rate_band": "0.25",
+    "fallback_target_met": true
+  },
+  "per_rule_at_shipped_bands": {
+    "foreign_remittance_rolling_year": {
+      "crossing_pairs": 52,
+      "median_lead_days_moderate": 177.5,
+      "median_lead_days_low": 177.5,
+      "warned_in_advance_moderate": 0.904,
+      "warned_in_advance_low": 0.904,
+      "false_alarm_rate_moderate": 0.021,
+      "false_alarm_rate_low": 0.021,
+      "never_crossing_pairs_judged": 48,
+      "moderate_claim_precision": 0.923,
+      "moderate_claims_judged": 519
+    },
+    "undocumented_deduction_candidates": {
+      "crossing_pairs": 93,
+      "median_lead_days_moderate": 22,
+      "median_lead_days_low": 22,
+      "warned_in_advance_moderate": 0.806,
+      "warned_in_advance_low": 0.806,
+      "false_alarm_rate_moderate": 0.571,
+      "false_alarm_rate_low": 0.571,
+      "never_crossing_pairs_judged": 7,
+      "moderate_claim_precision": 0.956,
+      "moderate_claims_judged": 316
+    },
+    "education_spend_fiscal_year": {
+      "crossing_pairs": 58,
+      "median_lead_days_moderate": 179.5,
+      "median_lead_days_low": 179.5,
+      "warned_in_advance_moderate": 0.793,
+      "warned_in_advance_low": 0.793,
+      "false_alarm_rate_moderate": 0.31,
+      "false_alarm_rate_low": 0.31,
+      "never_crossing_pairs_judged": 42,
+      "moderate_claim_precision": 0.834,
+      "moderate_claims_judged": 199
+    },
+    "large_single_transfer": {
+      "crossing_pairs": 11,
+      "median_lead_days_moderate": 0,
+      "median_lead_days_low": 0,
+      "warned_in_advance_moderate": 0.0,
+      "warned_in_advance_low": 0.091,
+      "false_alarm_rate_moderate": 0.0,
+      "false_alarm_rate_low": 0.124,
+      "never_crossing_pairs_judged": 89,
+      "moderate_claim_precision": null,
+      "moderate_claims_judged": 0
+    }
+  },
+  "all_threshold_rules_at_shipped_bands": {
+    "crossing_pairs": 214,
+    "median_lead_days_moderate": 31.5,
+    "median_lead_days_low": 32.5,
+    "warned_in_advance_moderate": 0.785,
+    "warned_in_advance_low": 0.79,
+    "false_alarm_rate_moderate": 0.097,
+    "false_alarm_rate_low": 0.156,
+    "never_crossing_pairs_judged": 186,
+    "moderate_claim_precision": 0.916,
+    "moderate_claims_judged": 1034
+  },
+  "baseline_threshold_only": {
+    "median_lead_days": 0,
+    "warned_in_advance": 0.0,
+    "false_alarm_rate": 0.0
+  },
+  "band_sweep": {
+    "mult=0 early=1.0 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 32.5,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.79,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.156,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=1 early=1.0 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 119.5,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.855,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.317,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=1.5 early=1.0 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 119.5,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.855,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.43,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=2 early=1.0 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 122.0,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.86,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.409,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=3 early=1.0 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 128.5,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.86,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.376,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=4 early=1.0 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 128.5,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.86,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.382,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=0 early=0.3 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 50.0,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.822,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.156,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=0 early=0.5 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 41.0,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.822,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.156,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=0 early=0.7 fallback=0.25": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 31.5,
+      "median_lead_days_low": 36.0,
+      "warned_in_advance_moderate": 0.785,
+      "warned_in_advance_low": 0.808,
+      "false_alarm_rate_moderate": 0.097,
+      "false_alarm_rate_low": 0.156,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.916,
+      "moderate_claims_judged": 1034
+    },
+    "mult=0 early=1.0 fallback=0.15": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 54.0,
+      "median_lead_days_low": 54.5,
+      "warned_in_advance_moderate": 0.804,
+      "warned_in_advance_low": 0.808,
+      "false_alarm_rate_moderate": 0.124,
+      "false_alarm_rate_low": 0.183,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.899,
+      "moderate_claims_judged": 1096
+    },
+    "mult=0 early=1.0 fallback=0.40": {
+      "crossing_pairs": 214,
+      "median_lead_days_moderate": 30.5,
+      "median_lead_days_low": 31.0,
+      "warned_in_advance_moderate": 0.776,
+      "warned_in_advance_low": 0.78,
+      "false_alarm_rate_moderate": 0.065,
+      "false_alarm_rate_low": 0.124,
+      "never_crossing_pairs_judged": 186,
+      "moderate_claim_precision": 0.929,
+      "moderate_claims_judged": 974
+    }
+  },
+  "interval_coverage": {
+    "matched_months": {
+      "n": 565,
+      "observed_coverage": 0.48
+    },
+    "fixed_fallback_band": {
+      "n": 569,
+      "observed_coverage": 0.23
+    }
+  },
+  "cold_start": {
+    "projections_below_30_days": 0,
+    "watch_flags_below_90_days": 0
+  },
+  "whole_engine": {
+    "strings_scanned": 8193,
+    "assertive_law_matches": 0,
+    "flags": 874,
+    "flags_missing_referral": 0,
+    "verdicts_recomputed": 444,
+    "verdicts_reproducible_pct": 100.0
+  },
+  "determinism_and_latency": {
+    "byte_identical_on_rerun": true,
+    "latency_ms_p50": 2.3,
+    "latency_ms_p95": 2.6,
+    "ledger_lines": 327
+  },
+  "threshold_sensitivity": {
+    "foreign_remittance_rolling_year": {
+      "x0.5": {
+        "ledgers_ever_flagged": 31,
+        "crossing_pairs": 30,
+        "median_lead_days_moderate": 158.0,
+        "false_alarm_rate_low": 0.1
+      },
+      "x0.75": {
+        "ledgers_ever_flagged": 30,
+        "crossing_pairs": 26,
+        "median_lead_days_moderate": 201.0,
+        "false_alarm_rate_low": 0.0
+      },
+      "x1": {
+        "ledgers_ever_flagged": 26,
+        "crossing_pairs": 19,
+        "median_lead_days_moderate": 90,
+        "false_alarm_rate_low": 0.0
+      },
+      "x1.25": {
+        "ledgers_ever_flagged": 22,
+        "crossing_pairs": 13,
+        "median_lead_days_moderate": 119,
+        "false_alarm_rate_low": 0.0
+      },
+      "x1.5": {
+        "ledgers_ever_flagged": 17,
+        "crossing_pairs": 6,
+        "median_lead_days_moderate": 235.5,
+        "false_alarm_rate_low": 0.029
+      }
+    },
+    "undocumented_deduction_candidates": {
+      "x0.5": {
+        "ledgers_ever_flagged": 39,
+        "crossing_pairs": 34,
+        "median_lead_days_moderate": 0.0,
+        "false_alarm_rate_low": 0.0
+      },
+      "x0.75": {
+        "ledgers_ever_flagged": 39,
+        "crossing_pairs": 34,
+        "median_lead_days_moderate": 14.5,
+        "false_alarm_rate_low": 0.5
+      },
+      "x1": {
+        "ledgers_ever_flagged": 39,
+        "crossing_pairs": 38,
+        "median_lead_days_moderate": 23.5,
+        "false_alarm_rate_low": 0.5
+      },
+      "x1.25": {
+        "ledgers_ever_flagged": 39,
+        "crossing_pairs": 37,
+        "median_lead_days_moderate": 26,
+        "false_alarm_rate_low": 0.667
+      },
+      "x1.5": {
+        "ledgers_ever_flagged": 38,
+        "crossing_pairs": 36,
+        "median_lead_days_moderate": 31.0,
+        "false_alarm_rate_low": 0.25
+      }
+    },
+    "education_spend_fiscal_year": {
+      "x0.5": {
+        "ledgers_ever_flagged": 40,
+        "crossing_pairs": 38,
+        "median_lead_days_moderate": 33.5,
+        "false_alarm_rate_low": 0.5
+      },
+      "x0.75": {
+        "ledgers_ever_flagged": 37,
+        "crossing_pairs": 27,
+        "median_lead_days_moderate": 60,
+        "false_alarm_rate_low": 0.462
+      },
+      "x1": {
+        "ledgers_ever_flagged": 34,
+        "crossing_pairs": 20,
+        "median_lead_days_moderate": 179.5,
+        "false_alarm_rate_low": 0.4
+      },
+      "x1.25": {
+        "ledgers_ever_flagged": 29,
+        "crossing_pairs": 18,
+        "median_lead_days_moderate": 182.5,
+        "false_alarm_rate_low": 0.136
+      },
+      "x1.5": {
+        "ledgers_ever_flagged": 24,
+        "crossing_pairs": 11,
+        "median_lead_days_moderate": 188,
+        "false_alarm_rate_low": 0.276
+      }
+    },
+    "large_single_transfer": {
+      "x0.5": {
+        "ledgers_ever_flagged": 28,
+        "crossing_pairs": 22,
+        "median_lead_days_moderate": 0.0,
+        "false_alarm_rate_low": 0.333
+      },
+      "x0.75": {
+        "ledgers_ever_flagged": 13,
+        "crossing_pairs": 10,
+        "median_lead_days_moderate": 0.0,
+        "false_alarm_rate_low": 0.1
+      },
+      "x1": {
+        "ledgers_ever_flagged": 9,
+        "crossing_pairs": 7,
+        "median_lead_days_moderate": 0,
+        "false_alarm_rate_low": 0.061
+      },
+      "x1.25": {
+        "ledgers_ever_flagged": 7,
+        "crossing_pairs": 2,
+        "median_lead_days_moderate": 0.0,
+        "false_alarm_rate_low": 0.132
+      },
+      "x1.5": {
+        "ledgers_ever_flagged": 4,
+        "crossing_pairs": 1,
+        "median_lead_days_moderate": 0,
+        "false_alarm_rate_low": 0.077
+      }
+    }
+  },
+  "pattern_rule_flags_at_day_540": {
+    "fiscal_boundary_commitments": {
+      "moderate": 100
+    },
+    "foreign_currency_footprint": {
+      "moderate": 8,
+      "low": 39
+    }
+  },
+  "runtime_seconds": 14.7
+}

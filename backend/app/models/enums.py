@@ -56,3 +56,12 @@ class ExposureKind(str, enum.Enum):
     INFLUENCER_CONTENT = "influencer_content"
     ADS_AND_DEAL_ALERTS = "ads_and_deal_alerts"
     OTHER = "other"
+
+
+class AssumptionSource(str, enum.Enum):
+    """Where a compliance rule's assumed figure came from. `user_verified`
+    records a claim the user made, not a check Meika performed."""
+
+    UNVERIFIED_DEFAULT = "unverified_default"
+    USER_SET = "user_set"
+    USER_VERIFIED = "user_verified"

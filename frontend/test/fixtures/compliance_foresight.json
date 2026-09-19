@@ -1,0 +1,597 @@
+{
+  "as_of": "2026-09-19",
+  "flags": [
+    {
+      "rule_key": "undocumented_deduction_candidates",
+      "title": "Education and housing costs with no receipt recorded",
+      "question": "Are you building up education or housing costs this tax year without a receipt recorded for them?",
+      "severity": "high",
+      "exposure_ratio": "3.6000",
+      "observed_krw": "3600000",
+      "assumed_threshold_krw": "1000000",
+      "assumption_source": "unverified_default",
+      "crossed_on": "2026-03-16",
+      "cross_earliest_on": null,
+      "cross_latest_on": null,
+      "factors": [
+        {
+          "label": "What Meika found",
+          "detail": "Over this tax year (since Jan 1, 2026) Meika found 8 matching transaction(s) totalling ₩3,600,000. Over the last 12 months the same rule matches ₩4,950,000. Both are shown because Meika can't know which period a real rule would use.",
+          "value": 3600000.0
+        },
+        {
+          "label": "The figure Meika is assuming",
+          "detail": "Meika is comparing this against an assumed figure of ₩1,000,000. This is Meika's unverified default. Meika doesn't know whether any such figure applies to you. Ask a tax professional whether any of these costs could matter for your return, and which records you would need to keep.",
+          "value": 1000000.0
+        },
+        {
+          "label": "Assumed figure reached",
+          "detail": "The running total reached the assumed figure on Mar 16, 2026, at 'Tuition instalment', which took it to ₩1,350,000.",
+          "value": 360.0
+        },
+        {
+          "label": "Receipts recorded",
+          "detail": "8 of 8 matching expenses have no receipt recorded, worth ₩3,600,000. The oldest is 247 days old; the median is 157 days old. Tick an expense below once you have its receipt.",
+          "value": 3600000.0
+        },
+        {
+          "label": "What Meika can see",
+          "detail": "Meika sees only the 39 expense(s) you logged, from Aug 16, 2025 to Sep 19, 2026. It can't see income or salary, bank balances or where accounts are held, investments or other assets, transfers you didn't log, the days you spent in any country, which is what most real reporting rules depend on.",
+          "value": 39.0
+        },
+        {
+          "label": "Confirm this with a qualified professional",
+          "detail": "This is a pattern Meika computed from your own logged spending. It is not a finding, not advice, and not a statement about the law in your country. Only a licensed tax professional there can tell you whether it matters.",
+          "value": null
+        }
+      ],
+      "evidence": [
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000070",
+          "occurred_on": "2026-08-13",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006f",
+          "occurred_on": "2026-07-14",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006e",
+          "occurred_on": "2026-06-14",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006d",
+          "occurred_on": "2026-05-15",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006c",
+          "occurred_on": "2026-04-15",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006b",
+          "occurred_on": "2026-03-16",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006a",
+          "occurred_on": "2026-02-14",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000069",
+          "occurred_on": "2026-01-15",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        }
+      ],
+      "annotatable": true
+    },
+    {
+      "rule_key": "fiscal_boundary_commitments",
+      "title": "Regular payments that run past the tax year end",
+      "question": "Do any of your regular payments continue past the end of this tax year, so part of the cost lands in the next one?",
+      "severity": "moderate",
+      "exposure_ratio": "1.5208",
+      "observed_krw": "1825000.00",
+      "assumed_threshold_krw": "1200000",
+      "assumption_source": null,
+      "crossed_on": null,
+      "cross_earliest_on": null,
+      "cross_latest_on": null,
+      "factors": [
+        {
+          "label": "'Dinner' repeats",
+          "detail": "'Dinner' has recurred 13 times about every 30 days, median ₩150,000 (amounts vary by 0%). At that pace ₩1,650,000 falls inside the tax year ending Dec 31, 2026, and a payment of about ₩150,000 falls on Jan 12, 2027, after it. That is ₩1,825,000 a year.",
+          "value": 1825000.0
+        },
+        {
+          "label": "The figure Meika is assuming",
+          "detail": "Meika treats regular payments worth ₩1,200,000 or more a year as worth mentioning. ₩1,200,000 a year (₩100,000 a month) is a round cut-off with no external basis. Meika sees payment dates, not what period each payment covers. Ask a tax professional whether it matters which tax year a regular payment falls in.",
+          "value": 1200000.0
+        },
+        {
+          "label": "What Meika can see",
+          "detail": "Meika sees only the 39 expense(s) you logged, from Aug 16, 2025 to Sep 19, 2026. It can't see income or salary, bank balances or where accounts are held, investments or other assets, transfers you didn't log, the days you spent in any country, which is what most real reporting rules depend on.",
+          "value": 39.0
+        },
+        {
+          "label": "Confirm this with a qualified professional",
+          "detail": "This is a pattern Meika computed from your own logged spending. It is not a finding, not advice, and not a statement about the law in your country. Only a licensed tax professional there can tell you whether it matters.",
+          "value": null
+        }
+      ],
+      "evidence": [
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000d4",
+          "occurred_on": "2026-08-15",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000d3",
+          "occurred_on": "2026-07-16",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000d2",
+          "occurred_on": "2026-06-16",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000d1",
+          "occurred_on": "2026-05-17",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000d0",
+          "occurred_on": "2026-04-17",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000cf",
+          "occurred_on": "2026-03-18",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000ce",
+          "occurred_on": "2026-02-16",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000cd",
+          "occurred_on": "2026-01-17",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000cc",
+          "occurred_on": "2025-12-18",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000cb",
+          "occurred_on": "2025-11-18",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000ca",
+          "occurred_on": "2025-10-19",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000c9",
+          "occurred_on": "2025-09-19",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-0000000000c8",
+          "occurred_on": "2025-08-20",
+          "title": "Dinner",
+          "amount_krw": "150000",
+          "original_currency": "USD",
+          "original_amount": "110",
+          "has_documentation": false
+        }
+      ],
+      "annotatable": false
+    },
+    {
+      "rule_key": "foreign_remittance_rolling_year",
+      "title": "Money sent abroad over 12 months",
+      "question": "Could the money you've logged as sent abroad in the last 12 months add up to a figure some countries ask people to report?",
+      "severity": "moderate",
+      "exposure_ratio": "0.9370",
+      "observed_krw": "12650000",
+      "assumed_threshold_krw": "13500000",
+      "assumption_source": "unverified_default",
+      "crossed_on": null,
+      "cross_earliest_on": "2026-10-14",
+      "cross_latest_on": "2026-10-14",
+      "factors": [
+        {
+          "label": "What Meika found",
+          "detail": "Over the last 12 months Meika found 11 matching transaction(s) totalling ₩12,650,000. Over this tax year (since Jan 1, 2026) the same rule matches ₩9,200,000. Both are shown because Meika can't know which period a real rule would use.",
+          "value": 12650000.0
+        },
+        {
+          "label": "The figure Meika is assuming",
+          "detail": "Meika is comparing this against an assumed figure of ₩13,500,000 (USD 10,000 held at a frozen 1,350 KRW/USD as of 2026-01-01). This is Meika's unverified default. Meika doesn't know whether any such figure applies to you. Ask a tax professional where you live whether any reporting rule applies to money you send abroad, and at what amount.",
+          "value": 13500000.0
+        },
+        {
+          "label": "Where the current pace leads",
+          "detail": "At the ₩34,658/day rate Meika has observed, this would reach the assumed figure between Oct 14, 2026 and Oct 14, 2026, 25 to 25 days from now. Your tax year ends Dec 31, 2026, 103 day(s) away.",
+          "value": 25.0
+        },
+        {
+          "label": "How wide the range is, and why",
+          "detail": "The date range comes from your own month-to-month variation for this rule: ₩0 across 11 complete months.",
+          "value": 0.0
+        },
+        {
+          "label": "Currency basis",
+          "detail": "11 of 11 matching transactions were entered in a currency other than USD and were converted to KRW at the rate on the day each was logged; the assumed figure is held at a frozen rate. The comparison is therefore approximate.",
+          "value": 11.0
+        },
+        {
+          "label": "What Meika can see",
+          "detail": "Meika sees only the 39 expense(s) you logged, from Aug 16, 2025 to Sep 19, 2026. It can't see income or salary, bank balances or where accounts are held, investments or other assets, transfers you didn't log, the days you spent in any country, which is what most real reporting rules depend on.",
+          "value": 39.0
+        },
+        {
+          "label": "Confirm this with a qualified professional",
+          "detail": "This is a pattern Meika computed from your own logged spending. It is not a finding, not advice, and not a statement about the law in your country. Only a licensed tax professional there can tell you whether it matters.",
+          "value": null
+        }
+      ],
+      "evidence": [
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000000d",
+          "occurred_on": "2026-08-11",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000000c",
+          "occurred_on": "2026-07-12",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000000b",
+          "occurred_on": "2026-06-12",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000000a",
+          "occurred_on": "2026-05-13",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000009",
+          "occurred_on": "2026-04-13",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000008",
+          "occurred_on": "2026-03-14",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000007",
+          "occurred_on": "2026-02-12",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000006",
+          "occurred_on": "2026-01-13",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000005",
+          "occurred_on": "2025-12-14",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000004",
+          "occurred_on": "2025-11-14",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000003",
+          "occurred_on": "2025-10-15",
+          "title": "Remittance to family",
+          "amount_krw": "1150000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        }
+      ],
+      "annotatable": false
+    },
+    {
+      "rule_key": "education_spend_fiscal_year",
+      "title": "Education spending this tax year",
+      "question": "Could your education spending this tax year reach a level where it's worth asking how it's treated?",
+      "severity": "moderate",
+      "exposure_ratio": "0.7200",
+      "observed_krw": "3600000",
+      "assumed_threshold_krw": "5000000",
+      "assumption_source": "unverified_default",
+      "crossed_on": null,
+      "cross_earliest_on": "2026-12-30",
+      "cross_latest_on": "2026-12-30",
+      "factors": [
+        {
+          "label": "What Meika found",
+          "detail": "Over this tax year (since Jan 1, 2026) Meika found 8 matching transaction(s) totalling ₩3,600,000. Over the last 12 months the same rule matches ₩4,950,000. Both are shown because Meika can't know which period a real rule would use.",
+          "value": 3600000.0
+        },
+        {
+          "label": "The figure Meika is assuming",
+          "detail": "Meika is comparing this against an assumed figure of ₩5,000,000. This is Meika's unverified default. Meika doesn't know whether any such figure applies to you. Ask a tax professional whether education costs are treated in any special way where you file.",
+          "value": 5000000.0
+        },
+        {
+          "label": "Where the current pace leads",
+          "detail": "At the ₩13,740/day rate Meika has observed, this would reach the assumed figure between Dec 30, 2026 and Dec 30, 2026, 102 to 102 days from now. Your tax year ends Dec 31, 2026, 103 day(s) away.",
+          "value": 102.0
+        },
+        {
+          "label": "How wide the range is, and why",
+          "detail": "The date range comes from your own month-to-month variation for this rule: ₩0 across 8 complete months.",
+          "value": 0.0
+        },
+        {
+          "label": "What Meika can see",
+          "detail": "Meika sees only the 39 expense(s) you logged, from Aug 16, 2025 to Sep 19, 2026. It can't see income or salary, bank balances or where accounts are held, investments or other assets, transfers you didn't log, the days you spent in any country, which is what most real reporting rules depend on.",
+          "value": 39.0
+        },
+        {
+          "label": "Confirm this with a qualified professional",
+          "detail": "This is a pattern Meika computed from your own logged spending. It is not a finding, not advice, and not a statement about the law in your country. Only a licensed tax professional there can tell you whether it matters.",
+          "value": null
+        }
+      ],
+      "evidence": [
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000070",
+          "occurred_on": "2026-08-13",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006f",
+          "occurred_on": "2026-07-14",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006e",
+          "occurred_on": "2026-06-14",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006d",
+          "occurred_on": "2026-05-15",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006c",
+          "occurred_on": "2026-04-15",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006b",
+          "occurred_on": "2026-03-16",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-00000000006a",
+          "occurred_on": "2026-02-14",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        },
+        {
+          "expense_id": "00000000-0000-0000-0000-000000000069",
+          "occurred_on": "2026-01-15",
+          "title": "Tuition instalment",
+          "amount_krw": "450000",
+          "original_currency": null,
+          "original_amount": null,
+          "has_documentation": false
+        }
+      ],
+      "annotatable": false
+    }
+  ],
+  "suppressed": [
+    {
+      "rule_key": "large_single_transfer",
+      "title": "One large transfer abroad",
+      "reason": "below_emission_band",
+      "detail": "The largest matching transaction is ₩1,150,000, against an assumed ₩4,050,000 (28%).",
+      "days_observed": null,
+      "days_required": null
+    },
+    {
+      "rule_key": "foreign_currency_footprint",
+      "title": "Spending in several currencies",
+      "reason": "below_emission_band",
+      "detail": "1 of 3 pattern conditions met (1 foreign currency, 9% of spending, across 11 month(s)).",
+      "days_observed": null,
+      "days_required": null
+    }
+  ],
+  "counts": {
+    "high": 1,
+    "moderate": 3,
+    "low": 0,
+    "rules_evaluated": 6,
+    "rules_suppressed": 2
+  },
+  "coverage": {
+    "expense_count": 39,
+    "first_day": "2025-08-16",
+    "ledger_days": 400,
+    "cannot_see": [
+      "income or salary",
+      "bank balances or where accounts are held",
+      "investments or other assets",
+      "transfers you didn't log",
+      "the days you spent in any country"
+    ]
+  },
+  "fiscal_window": {
+    "start": "2026-01-01",
+    "end": "2026-12-31",
+    "days_remaining": 103,
+    "is_default": true
+  },
+  "disclaimer": "Meika is not a tax adviser and does not know the law anywhere. Everything below is arithmetic on the expenses you logged, compared against figures you can and should change. Treat each item as a question to bring to a qualified professional, never as an answer.",
+  "rules_version": "2026-09-19"
+}

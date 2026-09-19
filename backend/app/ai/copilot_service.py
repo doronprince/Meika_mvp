@@ -27,7 +27,8 @@ from app.models.user import User
 from app.schemas.common import XAIFactor
 from app.schemas.dashboard import DashboardSummary
 from app.schemas.price_finder import PriceFinderResult
-from app.services import dashboard_service, price_finder_service
+from app.services import compliance_service, dashboard_service, price_finder_service
+from app.services.compliance_engine import coverage_factor, referral_factor
 from app.services.currency_display import DisplayCurrency, resolve_display_currency
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,13 @@ except ImportError:  # pragma: no cover - optional dependency
 
 
 async def generate_reply(db: AsyncSession, user_id: uuid.UUID, user_message: str) -> tuple[str, list[XAIFactor]]:
+    # [[no-tax-advice]]: a tax question never reaches Gemini. Not prompted more
+    # carefully — bypassed. A referral appended after a model has already
+    # asserted something about the law doesn't repair it, and no prompt
+    # instruction is a guarantee; this branch makes the guarantee structural.
+    if _looks_like_tax_question(user_message):
+        return await _tax_reply(db, user_id)
+
     summary, price_result = await _gather_context(db, user_id, user_message)
     factors = _extract_factors(summary, price_result)
 
@@ -66,6 +74,43 @@ _QUERY_PREFIXES = (
     "price of ", "cost of ", "how much for ",
 )
 _QUERY_SUFFIXES = (" cost", " costs", " price", " prices")
+
+
+_TAX_QUESTION_PATTERN = re.compile(
+    r"\b(tax|taxes|taxed|taxable|deduct\w*|receipts?|tax return|remit\w*|remittance|customs|declare|declaration"
+    r"|fiscal|compliance|residency|wire transfer|send money home|irs|hmrc)\b",
+    re.IGNORECASE,
+)
+
+
+def _looks_like_tax_question(message: str) -> bool:
+    return bool(_TAX_QUESTION_PATTERN.search(message))
+
+
+async def _tax_reply(db: AsyncSession, user_id: uuid.UUID) -> tuple[str, list[XAIFactor]]:
+    """Deterministic, and always ends on the professional-referral factor —
+    the same wording the Foresight tab shows."""
+    foresight = await compliance_service.get_foresight(db, user_id)
+    if foresight is None:
+        return "I don't have an account to reason about yet — log an expense first so I have real numbers to work with.", []
+
+    if foresight.flags:
+        top = foresight.flags[0]
+        observed = top.factors[0].detail
+        text = (
+            f"{top.question} {observed} That's arithmetic on the spending you logged, compared against a figure "
+            "Meika assumed — not a statement about the law. The Foresight tab shows the figure and lets you change "
+            "it, and a qualified tax professional is the right person to ask whether it matters."
+        )
+        return text, top.factors
+
+    text = (
+        f"Nothing in the {foresight.coverage.expense_count} expense(s) you've logged reaches any of the figures Meika "
+        f"is currently assuming ({foresight.counts.rules_evaluated} rules ran, {foresight.counts.rules_suppressed} "
+        "produced nothing). Meika only sees logged spending — not income, balances or accounts — and doesn't know "
+        "the law anywhere, so a qualified tax professional is the right person to ask."
+    )
+    return text, [coverage_factor(foresight.coverage, foresight.as_of), referral_factor(None)]
 
 
 def _looks_like_price_question(message: str) -> bool:
