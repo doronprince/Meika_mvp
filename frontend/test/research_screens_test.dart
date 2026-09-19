@@ -10,15 +10,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meika/data/models/claim_report.dart';
 import 'package:meika/data/models/exposure.dart';
 import 'package:meika/data/models/income_stream.dart';
 import 'package:meika/data/models/survival_report.dart';
 import 'package:meika/data/models/user_profile.dart';
 import 'package:meika/data/models/vulnerability_report.dart';
+import 'package:meika/data/repositories/claim_repository.dart';
 import 'package:meika/data/repositories/exposure_repository.dart';
 import 'package:meika/data/repositories/vulnerability_repository.dart';
 import 'package:meika/providers/currency_providers.dart';
 import 'package:meika/providers/survival_providers.dart';
+import 'package:meika/screens/claim_check_screen.dart';
 import 'package:meika/screens/exposure_screen.dart';
 import 'package:meika/screens/research_hub_screen.dart';
 import 'package:meika/screens/survival_screen.dart';
@@ -177,5 +180,41 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Not enough data yet'), findsOneWidget);
     expect(find.text('Exploratory breakdown'), findsNothing);
+  });
+
+  List<Override> claimOverrides() => [
+        ...commonOverrides(),
+        claimHistoryProvider.overrideWith(
+          (ref) async => (fixture('claim_history') as List)
+              .map((h) => ClaimSummary.fromJson(h as Map<String, dynamic>))
+              .toList(),
+        ),
+      ];
+
+  testWidgets('claim check renders a live evaluation with its sources and components', (tester) async {
+    final report = ClaimReport.fromJson(fixture('claim_live') as Map<String, dynamic>);
+    await pumpScreen(tester, ClaimCheckScreen(initialReport: report), claimOverrides());
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('${report.cautionScore}'), findsWidgets);
+    expect(find.text('What goes into it'), findsOneWidget);
+    expect(find.text('Sources'), findsOneWidget);
+    expect(find.text('Your cushion'), findsOneWidget);
+    expect(find.textContaining('not a truth score'), findsOneWidget);
+    for (final component in report.components) {
+      expect(find.text(component.name), findsOneWidget);
+    }
+  });
+
+  testWidgets('claim check without sources shows no score rather than a zero', (tester) async {
+    final report = ClaimReport.fromJson(fixture('claim_unavailable') as Map<String, dynamic>);
+    await pumpScreen(tester, ClaimCheckScreen(initialReport: report), claimOverrides());
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('No score'), findsOneWidget);
+    expect(find.text('No sources, so no caution score'), findsOneWidget);
+    expect(find.text('No sources were retrieved for this claim.'), findsOneWidget);
+    // Short page, so the history card at the bottom is built too.
+    expect(find.text('Earlier checks'), findsOneWidget);
   });
 }

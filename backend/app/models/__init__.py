@@ -1,6 +1,7 @@
 from app.models.base import Base
 from app.models.catalog import PriceQuote, Product, ProductListing, Store
 from app.models.chat import ChatMessage
+from app.models.claim import ClaimEvaluation, ClaimEvidenceCache
 from app.models.compliance import ComplianceRuleOverride, ExpenseTaxAnnotation, UserComplianceProfile
 from app.models.expense import Expense
 from app.models.exposure import ExposureSession
@@ -19,6 +20,8 @@ __all__ = [
     "ChatMessage",
     "IncomeStream",
     "ExposureSession",
+    "ClaimEvaluation",
+    "ClaimEvidenceCache",
     "Goal",
     "GoalContribution",
     "UserComplianceProfile",

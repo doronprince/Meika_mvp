@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/zen_theme.dart';
 import '../widgets/bounded_content.dart';
 import 'compliance_screen.dart';
+import 'claim_check_screen.dart';
 import 'exposure_screen.dart';
 import 'survival_screen.dart';
 import 'vulnerability_screen.dart';
@@ -51,10 +52,11 @@ class ResearchHubScreen extends StatelessWidget {
             subtitle: 'Whether time on shopping feeds lines up with spending spikes, with a nudge before they happen.',
             builder: (_) => const ExposureScreen(),
           ),
-          const _ModuleTile(
+          _ModuleTile(
             icon: Icons.fact_check_outlined,
             title: 'Claim check',
             subtitle: 'Weigh a money claim you saw online: sources, conflicts of interest, and what it means for you.',
+            builder: (_) => const ClaimCheckScreen(),
           ),
         ],
       ),

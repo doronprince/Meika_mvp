@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
-from app.routers import auth, chat, compliance, dashboard, expense, exposure, fx, goals, health, income, price_finder, survival, users, vulnerability, ws_copilot
+from app.routers import auth, chat, claim_check, compliance, dashboard, expense, exposure, fx, goals, health, income, price_finder, survival, users, vulnerability, ws_copilot
 
 
 @asynccontextmanager
@@ -49,6 +49,7 @@ def create_application() -> FastAPI:
     application.include_router(survival.router, prefix=settings.api_v1_prefix)
     application.include_router(vulnerability.router, prefix=settings.api_v1_prefix)
     application.include_router(exposure.router, prefix=settings.api_v1_prefix)
+    application.include_router(claim_check.router, prefix=settings.api_v1_prefix)
     application.include_router(goals.router, prefix=settings.api_v1_prefix)
     application.include_router(price_finder.router, prefix=settings.api_v1_prefix)
     application.include_router(fx.router, prefix=settings.api_v1_prefix)
