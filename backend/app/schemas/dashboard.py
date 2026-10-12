@@ -31,5 +31,9 @@ class DashboardSummary(BaseModel):
     spending_velocity_krw_per_day: Decimal
     projected_month_end_spend_krw: Decimal | None
     projected_overage_krw: Decimal | None
+    # The two halves of the projection: commitments counted once, and the
+    # daily rate of everything else. Null whenever the projection is.
+    projected_recurring_krw: Decimal | None = None
+    variable_spend_per_day_krw: Decimal | None = None
     category_breakdown: list[CategoryBreakdownItem]
     clarity_score: ClarityScore

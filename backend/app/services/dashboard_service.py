@@ -1,7 +1,9 @@
 import calendar
+import re
 import uuid
 from collections import defaultdict
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import select
@@ -19,11 +21,110 @@ from app.services.currency_display import DisplayCurrency, resolve_display_curre
 # suppressed rather than shown with false confidence.
 MIN_DAYS_FOR_PROJECTION = 7
 
+# [[recurring-is-not-a-rate]]: month-end spend used to be a flat daily
+# average times the days in the month, which counts rent paid on the 1st
+# over and over and reports a breach every month. A commitment is charged
+# once; only variable spending is a rate. A commitment is the same merchant
+# and category seen in at least MIN_MONTHS_FOR_RECURRING of the last
+# RECURRING_LOOKBACK_MONTHS complete months -- long enough to tell a monthly
+# charge from a coincidence, short enough to notice one that has stopped.
+RECURRING_LOOKBACK_MONTHS = 4
+MIN_MONTHS_FOR_RECURRING = 3
+
 _CENTS = Decimal("0.01")
 
 
 def _q2(value: Decimal) -> Decimal:
     return value.quantize(_CENTS, rounding=ROUND_HALF_UP)
+
+
+def _line_total(expense) -> Decimal:
+    return expense.amount_krw + expense.transit_cost_krw
+
+
+def _commitment_key(expense) -> tuple[str, str]:
+    """Category plus the normalized merchant (or title). Exact matching only,
+    so a reviewer can reproduce the grouping from the expense list by eye."""
+    label = (expense.store_name or expense.title or "").lower()
+    return expense.category.value, re.sub(r"[^a-z0-9\uac00-\ud7a3]+", " ", label).strip()
+
+
+def _median(values: list[Decimal]) -> Decimal:
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / Decimal(2)
+
+
+def _complete_months_before(today: date, count: int) -> list[tuple[int, int]]:
+    year, month = today.year, today.month
+    months = []
+    for _ in range(count):
+        year, month = (year - 1, 12) if month == 1 else (year, month - 1)
+        months.append((year, month))
+    return months
+
+
+def recurring_monthly_commitments(history, today: date) -> dict[tuple[str, str], Decimal]:
+    """Each commitment's typical monthly amount, from complete months only."""
+    months = set(_complete_months_before(today, RECURRING_LOOKBACK_MONTHS))
+    per_month: dict[tuple[str, str], dict[tuple[int, int], Decimal]] = defaultdict(
+        lambda: defaultdict(lambda: Decimal("0"))
+    )
+    counts: dict[tuple[str, str], dict[tuple[int, int], int]] = defaultdict(lambda: defaultdict(int))
+    for expense in history:
+        month = (expense.occurred_on.year, expense.occurred_on.month)
+        if month in months:
+            key = _commitment_key(expense)
+            per_month[key][month] += _line_total(expense)
+            counts[key][month] += 1
+    # Exactly one charge in each of those months: rent and subscriptions
+    # qualify, the shop you visit twice a week does not — those are variable
+    # spending and belong in the rate.
+    return {
+        key: _median(list(amounts.values()))
+        for key, amounts in per_month.items()
+        if len(amounts) >= MIN_MONTHS_FOR_RECURRING
+        and key[1]
+        and all(count == 1 for count in counts[key].values())
+    }
+
+
+@dataclass(frozen=True)
+class MonthEndProjection:
+    total: Decimal
+    recurring: Decimal
+    variable_per_day: Decimal
+    commitment_count: int
+
+
+def project_month_end(*, this_month, history, today: date, days_in_month: int) -> "MonthEndProjection | None":
+    """Commitments once, variable spending at its daily rate. None until
+    MIN_DAYS_FOR_PROJECTION days of the month have passed."""
+    if today.day < MIN_DAYS_FOR_PROJECTION:
+        return None
+
+    commitments = recurring_monthly_commitments(history, today)
+    paid: dict[tuple[str, str], Decimal] = defaultdict(lambda: Decimal("0"))
+    variable = Decimal("0")
+    for expense in this_month:
+        key = _commitment_key(expense)
+        if key in commitments:
+            paid[key] += _line_total(expense)
+        else:
+            variable += _line_total(expense)
+
+    # A commitment already paid more than usual counts at what was actually
+    # paid; one not yet paid is still expected before the month ends.
+    recurring = sum((max(paid[key], usual) for key, usual in commitments.items()), Decimal("0"))
+    variable_per_day = variable / Decimal(today.day)
+    return MonthEndProjection(
+        total=_q2(recurring + variable_per_day * Decimal(days_in_month)),
+        recurring=_q2(recurring),
+        variable_per_day=_q2(variable_per_day),
+        commitment_count=len(commitments),
+    )
 
 
 async def get_dashboard_summary(
@@ -39,14 +140,21 @@ async def get_dashboard_summary(
     days_in_month = calendar.monthrange(today.year, today.month)[1]
     days_elapsed = today.day
 
+    # Four complete months of history as well as this month: commitments
+    # are recognised from the completed months only.
+    history_start = first_of_month
+    for _ in range(RECURRING_LOOKBACK_MONTHS):
+        history_start = (history_start - timedelta(days=1)).replace(day=1)
     result = await db.execute(
         select(Expense).where(
             Expense.user_id == user_id,
-            Expense.occurred_on >= first_of_month,
+            Expense.occurred_on >= history_start,
             Expense.occurred_on <= today,
         )
     )
-    expenses = list(result.scalars().all())
+    recent = list(result.scalars().all())
+    expenses = [e for e in recent if e.occurred_on >= first_of_month]
+    history = [e for e in recent if e.occurred_on < first_of_month]
 
     monthly_budget = user.monthly_budget_krw
     totals_by_category: dict[ExpenseCategory, Decimal] = defaultdict(lambda: Decimal("0"))
@@ -68,11 +176,13 @@ async def get_dashboard_summary(
 
     spending_velocity = _q2(total_spent / Decimal(days_elapsed))
 
-    projected_month_end_spend: Decimal | None = None
-    projected_overage: Decimal | None = None
-    if days_elapsed >= MIN_DAYS_FOR_PROJECTION:
-        projected_month_end_spend = _q2(spending_velocity * Decimal(days_in_month))
-        projected_overage = max(Decimal("0.00"), _q2(projected_month_end_spend - monthly_budget))
+    projection = project_month_end(
+        this_month=expenses, history=history, today=today, days_in_month=days_in_month
+    )
+    projected_month_end_spend = projection.total if projection else None
+    projected_overage = (
+        max(Decimal("0.00"), _q2(projection.total - monthly_budget)) if projection else None
+    )
 
     clarity_score = _compute_clarity_score(
         monthly_budget=monthly_budget,
@@ -83,6 +193,7 @@ async def get_dashboard_summary(
         category_breakdown=category_breakdown,
         projected_month_end_spend=projected_month_end_spend,
         projected_overage=projected_overage,
+        projection=projection,
         display=display,
     )
 
@@ -95,6 +206,8 @@ async def get_dashboard_summary(
         spending_velocity_krw_per_day=spending_velocity,
         projected_month_end_spend_krw=projected_month_end_spend,
         projected_overage_krw=projected_overage,
+        projected_recurring_krw=projection.recurring if projection else None,
+        variable_spend_per_day_krw=projection.variable_per_day if projection else None,
         category_breakdown=category_breakdown,
         clarity_score=clarity_score,
     )
@@ -110,6 +223,7 @@ def _compute_clarity_score(
     category_breakdown: list[CategoryBreakdownItem],
     projected_month_end_spend: Decimal | None,
     projected_overage: Decimal | None,
+    projection: "MonthEndProjection | None",
     display: DisplayCurrency,
 ) -> ClarityScore:
     factors: list[XAIFactor] = []
@@ -167,8 +281,15 @@ def _compute_clarity_score(
             XAIFactor(
                 label="Projected to exceed budget" if overage > 0 else "Projected to stay within budget",
                 detail=(
-                    f"At the current pace of {display.format(spending_velocity)}/day, "
-                    f"projected month-end spend is {display.format(projected_month_end_spend)} against a "
+                    (
+                        f"{display.format(projection.recurring)} of regular monthly commitments "
+                        f"({projection.commitment_count} recognised from your last "
+                        f"{RECURRING_LOOKBACK_MONTHS} months) counted once, plus variable spending of "
+                        f"{display.format(projection.variable_per_day)}/day across {days_in_month} days, "
+                        if projection and projection.commitment_count
+                        else f"At the current pace of {display.format(spending_velocity)}/day, "
+                    )
+                    + f"projects a month-end spend of {display.format(projected_month_end_spend)} against a "
                     f"{display.format(monthly_budget)} budget"
                     + (f" (projected overage: {display.format(overage)})." if overage > 0 else ".")
                 ),
