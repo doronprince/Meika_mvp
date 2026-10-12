@@ -34,7 +34,7 @@ Chennai, India}
 \maketitle
 
 \begin{abstract}
-Personal financial management applications are abundant, yet most remain retrospective: they record transactions and render historical summaries without projecting a user's future financial position. Where artificial intelligence is applied, its outputs usually reach the user as bare predictions or scores, with no account of the reasoning that produced them. Recent surveys identify this transparency deficit as a principal obstacle to trust in financial AI. This paper presents MEIKA, an Explainable AI (XAI)-based personal financial copilot in which explainability is a structural constraint on every output. MEIKA computes two predictive budgeting indicators from live transaction data, spending velocity and a projected month-end spend, and combines them with a category-concentration measure into a deterministic Financial Clarity Score. Every component of that score is emitted as a named \texttt{XAIFactor} object carrying a label, an explanatory detail, and the computed value, so no figure reaches the user without its justification. The system is a decoupled monorepo: a Flutter client, a layered FastAPI backend with Pydantic validation and asynchronous SQLAlchemy over a tenant-isolated PostgreSQL schema, and a bounded Gemini reasoning layer restricted to rephrasing already-computed factors. At the Phase-I review the prototype demonstrated three tested REST modules producing a Clarity Score of 91/100 with three live factors over a seeded dataset. The implementation has since been extended with a grounded conversational copilot, a price-comparison module, authentication, and multi-currency display. Explainable goal forecasting and empirical calibration of the score remain the principal items of future work.
+Personal financial management applications are abundant, yet most remain retrospective: they record transactions and render historical summaries without projecting a user's future financial position. Where artificial intelligence is applied, its outputs usually reach the user as bare predictions or scores, with no account of the reasoning that produced them. Recent surveys identify this transparency deficit as a principal obstacle to trust in financial AI. This paper presents MEIKA, an Explainable AI (XAI)-based personal financial copilot in which explainability is a structural constraint on every output. MEIKA computes two predictive budgeting indicators from live transaction data, spending velocity and a projected month-end spend, and combines them with a category-concentration measure into a deterministic Financial Clarity Score. Every component of that score is emitted as a named \texttt{XAIFactor} object carrying a label, an explanatory detail, and the computed value, so no figure reaches the user without its justification. The system is a decoupled monorepo: a Flutter client, a layered FastAPI backend with Pydantic validation and asynchronous SQLAlchemy over a tenant-isolated PostgreSQL schema, and a bounded Gemini reasoning layer restricted to rephrasing already-computed factors. At the Phase-I review the prototype demonstrated three tested REST modules producing a Clarity Score of 91/100 with three live factors over a seeded dataset. The system has since been extended with explainable goal forecasting and five predictive modules that look beyond the current month: tax and compliance foresight, pre-visible vulnerability detection, digital-exposure correlation, multi-shock survival runway, and evaluation of financial claims found online. Each module ships with a seeded, reproducible evaluation harness rather than an unmeasured capability claim, and this paper reports what those harnesses measured, including where a module is beaten by a simpler baseline and where a shipped feature was switched off because it could not meet a false-alarm target fixed in advance. Across 100 synthetic 18-month ledgers the compliance module warned of 78.5\% of threshold crossings a median 31.5 days ahead of a threshold-only baseline, at a 9.7\% false-alarm rate, and 100\% of its verdicts were recomputable from their published explanations. All reported figures are from synthetic cohorts; real-user validation and a comprehension study remain future work.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -106,7 +106,7 @@ Badiger et al. present Spend AI, a full-stack personal finance platform built on
 
 Unde et al. similarly propose an AI-Based Real-Time Personal Finance Dashboard that consolidates fragmented financial data through banking-API ingestion, CNN/YOLOv4-based OCR for receipt digitization, BERT/LSTM models for categorization and savings forecasting, and autoencoder-based anomaly detection, paired with an LLM-driven advisory chatbot \cite{unde2026dashboard}. The authors' own review concludes that most contemporary tools address isolated tasks such as receipt scanning or budgeting, with a persistent lack of a unified, real-time dashboard that integrates visual recognition, anomaly detection, and cross-platform data consolidation. Saini et al. take a broader view, surveying AI's role across categorization, budgeting, robo-advisory, and financial-literacy tools (e.g., Mint, Cleo, YNAB, Betterment). They conclude that despite rapid capability growth, data quality, legacy-system integration, algorithmic fairness, and again transparency in AI-generated recommendations remain open, field-wide challenges \cite{saini2025aipowered}.
 
-Deepthi et al. describe a serverless, microservices-based AI-Powered Finance Management Platform combining XGBoost and Random Forest classifiers for transaction categorization and fraud detection, ARIMA/LSTM time-series models for budgeting and forecasting, and an LLM (Gemini/GPT-4) for conversational financial advice, with SHAP used to make selected predictions interpretable \cite{deepthi2026aipowered}. Reported fraud-detection accuracy reaches 98\%, but explainability is treated as an add-on technique applied to specific models rather than as a property enforced across every recommendation the system produces.
+Deepthi et al. describe a serverless, microservices-based AI-Powered Finance Management Platform combining XGBoost and Random Forest classifiers for transaction categorization and fraud detection, ARIMA/LSTM time-series models for budgeting and forecasting, and an LLM (Gemini/GPT-4) for conversational financial advice, with SHAP used to make selected predictions interpretable \cite{deepthi2026aipowered}. Reported fraud-detection accuracy reaches 98\%, but explainability is an add-on technique applied to specific models, and the system does not require it of every recommendation.
 
 Kakulapati et al.'s AI-Powered Personal Expense Tracker uses a Django backend and a linear-regression model to evaluate historical expenditures and predict forthcoming spending patterns, recommending expenditure categories via natural-language processing and delivering results through a React interface \cite{kakulapati2026expensetracker}. While effective for short-horizon expense prediction and anomaly identification, the system does not address longer-term goal forecasting or structured risk analysis, and its predictive reasoning is not exposed to the end user in an explainable form.
 
@@ -163,7 +163,7 @@ G3. Fragmented, single-purpose tooling & Tracking, budgeting, risk alerting, and
 \hline
 G4. Retrospective rather than forward-looking analysis & Systems report historical spend; conceptual surveys propose forecasting without shipping it \cite{nie2024survey}, \cite{khan2025bridging} & Spending velocity and month-end projection are computed from live transaction rows on every dashboard request, with a warm-up guard that suppresses projections drawn from statistically thin data \\
 \hline
-G5. Absence of explainable goal forecasting & Goal planning is either absent or delivered without interpretable reasoning; forecasting is deferred to future work \cite{patil2026nexus} & Goal forecasting is scoped as a planned module held to the same construction-time explainability constraint as the Clarity Score (see Section XI) \\
+G5. Absence of explainable goal forecasting & Goal planning is either absent or delivered without interpretable reasoning; forecasting is deferred to future work \cite{patil2026nexus} & Goal forecasting is implemented and held to the same construction-time explainability constraint as the Clarity Score: each verdict ships with the factors behind it and a counterfactual daily rate that would reach the target \\
 \hline
 \end{tabular}
 \end{table*}
@@ -178,7 +178,7 @@ Users record expenditure through the Flutter client, either by manual entry or b
 
 \subsection{Predictive Budgeting (Implemented)}
 
-From the transactions recorded in the current calendar month, the system derives a spending velocity (expenditure per elapsed day) and extrapolates it across the full month to obtain a projected month-end spend, together with any projected overage against the user's configured monthly budget. The projection is deliberately suppressed when fewer than seven days of data are available in the month, on the grounds that a single ordinary purchase early in a month produces a projection that swings wildly and would convey false confidence.
+From the transactions recorded in the current calendar month, the system derives a spending velocity (expenditure per elapsed day) and extrapolates it across the full month to obtain a projected month-end spend, together with any projected overage against the user's configured monthly budget. The projection is suppressed when fewer than seven days of data are available in the month, on the grounds that a single ordinary purchase early in a month produces a projection that swings wildly and would convey false confidence.
 
 \subsection{Financial Clarity Score (Implemented)}
 
@@ -192,13 +192,33 @@ Each factor contributing to the Clarity Score is emitted as a named \texttt{XAIF
 
 Risk is assessed along three concurrent axes: spending pace relative to an even distribution of the monthly budget, projected month-end outcome relative to that budget, and concentration of expenditure within a single category. These correspond to the three live factors demonstrated at the Phase-I review, pace, projection, and concentration, and each contributes both a penalty to the score and an explanatory factor to the response.
 
-\subsection{Goal Forecasting (Planned)}
+\subsection{Goal Forecasting (Implemented)}
 
-Goal forecasting would project whether a defined savings or spending target remains achievable given the observed spend trend. It is a stated objective of the project and is not implemented at the time of writing; a source-level inspection of the backend and client confirms that no goal model, service, or endpoint exists. This paper treats it throughout as a planned extension.
+A user defines a savings target or a spending cap with a target date. On every read the system recomputes a verdict --- on track, at risk, off track, achieved, missed, or too early to tell --- from the observed pace, and emits it with the factors behind it and a counterfactual: the exact daily rate that lands on target and how far the current pace is from it. The verdict is defined \emph{by} that counterfactual, so a verdict and its explanation cannot disagree: \emph{at risk} means a pace change of at most 25\% closes the gap, and \emph{off track} means it does not. Savings goals track logged contributions, keeping any opening balance out of the pace so it is not projected forward; spending caps track real expenses, including transit cost, optionally within one category. Below seven days of history the projection is withheld, reusing the dashboard's warm-up rule, while the required daily rate --- plain arithmetic, not a projection --- is still shown.
+
+\subsection{Tax and Compliance Foresight (Implemented)}
+
+Addressing the question \emph{what financial event today could create a tax or compliance problem months later?}, six rules stored as data, not code, run over four pure detectors: an amount accumulating toward an assumed figure, a single large transaction, a multi-currency spending pattern, and regular payments that cross the tax-year boundary. Every flag is a \emph{possible} question rather than a finding: it names the assumed figure and its provenance, shows the arithmetic, states what the system cannot see (income, balances, account locations, unlogged transfers, days present in any country), and ends with a referral to a qualified professional appended in code so no rule author can omit it. The module deliberately emits no aggregate compliance score, since a single number would imply an authoritative legal judgment it cannot make. Users may change any figure, mark it as checked with a professional, disable a rule, or set their own tax year. The conversational copilot is structurally bypassed for tax questions and answers from the same deterministic result.
+
+\subsection{Pre-Visible Vulnerability (Implemented)}
+
+Addressing \emph{how can future financial vulnerability be detected before it is visible in the current month?}, the module computes leading indicators of strain --- shortening intervals between purchases, drift toward impulse-prone categories and late hours, and growth in recurring commitments --- into a vulnerability index with an explicit lead-time estimate, and is replayable for any past day so the claim can be audited after the fact.
+
+\subsection{Digital Exposure and Spending (Implemented)}
+
+Addressing \emph{can digital exposure be associated with spending changes, and can an intervention precede the damage?}, the module correlates user-declared exposure windows with subsequent spending bursts. It has no social-media access and does not pretend to: the association is reported with its sample size and confidence, weekday effects are removed before testing because shopping and screen time share a weekly rhythm, and the output is explicitly an association, never a cause.
+
+\subsection{Survival Runway Under Compound Shocks (Implemented)}
+
+Addressing \emph{how long could this person sustain several simultaneous shocks?}, the module simulates income loss, rent increases, currency devaluation against the home currency, emergency costs, and inflation on essentials, separating essential from discretionary spending from the user's own category history and attributing the contribution of each shock to the reduction in runway.
+
+\subsection{Financial Claim Evaluation (Implemented)}
+
+Addressing \emph{can a system weigh a financial claim found online and relate it to this person's finances?}, the module retrieves real sources, scores their credibility and independence with an additive formula whose components sum to the displayed caution score, detects conflict-of-interest markers, measures disagreement between sources, and contextualizes the decision against the user's own computed figures. It never asserts that a claim is true or false; with no sources retrievable it returns no score rather than a zero, and with no stated stake it reports a band rather than inventing one.
 
 \subsection{Conversational Copilot (Implemented, with a Bounded and Partially Unvalidated Model Path)}
 
-The conversational layer is exposed over a WebSocket endpoint and is grounded by construction: replies are assembled from the same computed Clarity Score factors and price-comparison results that the dashboard uses, and chat history is persisted. Its status has three parts. The transport, grounding pipeline, history persistence, and deterministic reply path are implemented and covered by automated tests. The live Gemini generation path is implemented and wrapped so that any failure falls back to the deterministic path, but it has not been validated against a live API key. The model's role is bounded by design: it may rephrase already-computed figures conversationally, and it cannot introduce a value the deterministic layer did not compute.
+The conversational layer is exposed over a WebSocket endpoint and is grounded by construction: replies are assembled from the same computed Clarity Score factors and price-comparison results that the dashboard uses, and chat history is persisted. Three things must be kept separate here. The transport, grounding pipeline, history persistence, and deterministic reply path are implemented and covered by automated tests. The live Gemini generation path is implemented and wrapped so that any failure falls back to the deterministic path, but it has not been validated against a live API key. The model's role is bounded by design: it may rephrase already-computed figures conversationally, and it cannot introduce a value the deterministic layer did not compute.
 
 \subsection{Price-Finder and True Economic Cost (Implemented)}
 
@@ -279,13 +299,17 @@ On each dashboard request, the service layer loads the caller's expenses for the
 v = \frac{S}{d}
 \end{equation}
 
-Projected month-end expenditure extrapolates that velocity across the full month, and projected overage is the non-negative excess of that projection over the budget:
+Projecting month-end expenditure by extrapolating $v$ alone is incorrect in the presence of recurring commitments, and measurably so: rent paid on the first of the month is counted again on every remaining day, so a \mbox{\textrm{\textwon}500,000} rent with \mbox{\textrm{\textwon}10,000}/day of variable spending projects \mbox{\textrm{\textwon}1,860,000} instead of \mbox{\textrm{\textwon}810,000} and reports a budget breach every month. A commitment is charged once; only variable spending is a rate. Let $K$ be the set of recognised commitments --- the same merchant and category charged exactly once in at least three of the last four complete months --- with $m_k$ the median monthly amount of commitment $k$ and $a_k$ the amount already paid for it this month, and let $S_{\mathrm{var}}$ be month-to-date expenditure excluding those commitments. Then:
 
 \begin{equation}
-P = v \cdot D, \qquad O = \max(0,\; P - B)
+R = \sum_{k \in K} \max(a_k,\, m_k), \qquad v_{\mathrm{var}} = \frac{S_{\mathrm{var}}}{d}
 \end{equation}
 
-Equation (2) is evaluated only when $d \geq d_{\min}$, with $d_{\min} = 7$ in the current implementation. Below that threshold the projection is withheld and replaced by an explanatory factor stating why.
+\begin{equation}
+P = R + v_{\mathrm{var}} \cdot D, \qquad O = \max(0,\; P - B)
+\end{equation}
+
+A commitment already paid more than usual counts at what was actually paid; one not yet paid is still expected before the month ends. A merchant visited often is not a commitment and stays in the rate. With no history $K = \varnothing$ and the projection reduces to the simple rate $v \cdot D$, and the explanatory factor states which of the two forms produced the figure. Equations (2)--(3) are evaluated only when $d \geq d_{\min}$, with $d_{\min} = 7$ in the current implementation. Below that threshold the projection is withheld and replaced by an explanatory factor stating why.
 
 \subsection{Step 4: Explain}
 
@@ -313,9 +337,9 @@ and the score is the clamped, rounded complement of their sum:
 \mathrm{CS} = \mathrm{clamp}_{[0,100]}\Big(\big\lfloor 100 - (\Pi_{\text{pace}} + \Pi_{\text{proj}} + \Pi_{\text{conc}}) \big\rceil\Big)
 \end{equation}
 
-The score maps to a categorical risk level: \emph{low} for $\mathrm{CS} \geq 70$, \emph{moderate} for $40 \leq \mathrm{CS} < 70$, and \emph{high} below 40. Equations (1) through (7) reflect the current implementation in \texttt{dashboard\_service.py} rather than a conceptual formulation; the constants 35, 40, 25, and 15 are design parameters chosen to weight the three axes, and are candidates for empirical calibration once a larger dataset is available (Section X).
+The score maps to a categorical risk level: \emph{low} for $\mathrm{CS} \geq 70$, \emph{moderate} for $40 \leq \mathrm{CS} < 70$, and \emph{high} below 40. Equations (1) through (8) reflect the current implementation in \texttt{dashboard\_service.py} rather than a conceptual formulation; the constants 35, 40, 25, and 15 are design parameters chosen to weight the three axes, and are candidates for empirical calibration once a larger dataset is available (Section X).
 
-The resulting decomposition is summarized in Fig.~\ref{fig:xaimodel}. Equations (4) through (6) make the score explainable in the sense used here: each penalty is a function of exactly one named, independently observable quantity, so a user can check how much each factor contributed to the final score and dispute it if it looks wrong. Concentration measures how much of the month's expenditure falls in a small number of categories. The implementation penalizes only the share above a $40\%$ tolerance, on the reasoning that some concentration is normal and only pronounced concentration signals fragility.
+The resulting decomposition is summarized in Fig.~\ref{fig:xaimodel}. Equations (5) through (7) make the score explainable in the sense used here: each penalty is a function of exactly one named, independently observable quantity, so a user can check how much each factor contributed to the final score and dispute it if it looks wrong. Concentration measures how much of the month's expenditure falls in a small number of categories. The implementation penalizes only the share above a $40\%$ tolerance, on the reasoning that some concentration is normal and only pronounced concentration signals fragility.
 
 \begin{figure}[!t]
 \centering
@@ -392,7 +416,7 @@ JWT auth, rate limiting & Not started & Implemented (MVP baseline) \\
 \hline
 Live Gemini call path & Not started & Implemented, not validated \\
 \hline
-Goal forecasting & Not started & Not started \\
+Goal forecasting & Not started & Implemented and measured \\
 \hline
 \end{tabular}
 \end{table}
@@ -436,7 +460,7 @@ Suppresses thin projections & Verified: projection withheld below seven days of 
 
 \subsection{Explainability Evaluation}
 
-The property that distinguishes the system is structural, so this part of the evaluation is structural too. In a conventional pipeline a model produces the score, and any explanation is reconstructed afterwards by a separate interpretability technique applied to that model. That leaves two failure modes: the explanation may be missing for some outputs, and where present it approximates the model's reasoning. In MEIKA the penalty and the factor describing it are built in the same operation from the same quantities, so the explanation states the computation exactly. The demonstrated output shows what this means for a user. Alongside the score of 91, the user can see that spending was running at 112\% of the even-pace budget, that the month-end projection exceeded the budget, and that the largest category stayed below the concentration tolerance.
+The property that distinguishes the system is structural, so this part of the evaluation is structural too. In a conventional pipeline a model produces the score, and any explanation is reconstructed afterwards by a separate interpretability technique applied to that model. That leaves two failure modes: the explanation may be missing for some outputs, and where present it approximates the model's reasoning. In MEIKA the penalty and the factor describing it are built in the same operation from the same quantities, so the explanation states the computation exactly. The demonstrated output shows what this means for a user. Alongside the score of 91, the user can see that spending was running at 112\% of the even-pace budget, that the month-end projection exceeded the budget by a margin carrying only a small penalty, and that the largest category stayed below the concentration tolerance.
 
 The guarantee covers the values the deterministic layer computes. It does not cover the language model's phrasing of those values, which prompt construction and the deterministic fallback path constrain but which has not been formally verified.
 
@@ -462,7 +486,7 @@ Any user, auditor, or reviewer can recompute a Clarity Score this way from the f
 
 \subsection{Implementation Status at the Time of Writing}
 
-The prototype has advanced considerably since the Phase-I review, as recorded in Table~\ref{tab:status}. Three modules listed as pending at the review have since been implemented: the copilot WebSocket integration, the copilot chat interface, and the authentication and rate-limiting layer. The price-comparison module, manual expense entry, and multi-currency display have also been added. Goal forecasting remains unimplemented and is the principal outstanding objective.
+The prototype has advanced considerably since the Phase-I review, as recorded in Table~\ref{tab:status}. Three modules listed as pending at the review have since been implemented: the copilot WebSocket integration, the copilot chat interface, and the authentication and rate-limiting layer. The price-comparison module, manual expense entry, and multi-currency display were added subsequently. Goal forecasting, the principal outstanding objective at the time of that review, is now implemented, as are the five predictive modules described in Section~V. The backend carries 185 automated tests and the client 11 widget tests, all passing against a provisioned PostgreSQL database at the time of writing, across eight hand-written Alembic migrations.
 
 \begin{figure}[!t]
 \centering
@@ -473,13 +497,46 @@ The prototype has advanced considerably since the Phase-I review, as recorded in
 \label{fig:screens}
 \end{figure}
 
-\subsection{Planned Experimental Evaluation}
+\subsection{Measured Evaluation of the Predictive Modules}
 
-The evaluation above establishes functional correctness but not calibration. A fuller evaluation is planned once a larger dataset and a user cohort are available; the intended measures are listed in Table~\ref{tab:futuremetrics}. No results are reported against these measures yet.
+Each predictive module ships with a seeded evaluation harness that runs in-process, without a database or network, so every figure below is reproducible from its seed alone (\texttt{backend/scripts/eval\_*.py}). All cohorts are synthetic, generated by the same authors who wrote the detectors; the harnesses therefore establish how the methods behave under known dynamics, not their accuracy on real users. Each module is measured against a named baseline, and results are reported where the baseline wins as well as where it loses. Table~\ref{tab:measured} summarises the headline figures.
 
 \begin{table}[!t]
 \centering
-\caption{Planned Evaluation Measures (No Results Reported)}
+\caption{Measured Results on Seeded Synthetic Cohorts}
+\label{tab:measured}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{2.2cm}|p{5.3cm}|}
+\hline
+\textbf{Module} & \textbf{Result against its baseline} \\
+\hline
+Goal forecasting & 1{,}000 ledgers. At the midpoint of a goal, mean absolute error 19.4\% of target vs 39.2\% for a no-further-progress baseline, but 11.3\% for a last-7-days rate; outcome accuracy 76.0\% vs 66.7\% and 81.5\%. Best on steady savers (1.2\% error), beaten whenever behaviour shifts. \\
+\hline
+Tax and compliance foresight & 100 ledgers, 214 crossings. 78.5\% warned in advance, median 31.5 days, vs 0 days for a threshold-only baseline; 9.7\% false alarms; 91.6\% precision on 1{,}034 ``reaches it this tax year'' claims. \\
+\hline
+Pre-visible vulnerability & 150 control + 150 drift users. At an index of 50, strain flagged a median 6 days before a lagging budget-breach detector for 16\% of drift users, at an 8\% control false-alarm rate; at 40, 26\% of users and 22\% false alarms. \\
+\hline
+Digital exposure & 200 null + 200 effect users. Weekday-demeaned test: 7\% false-positive rate, 87\% power; the no-demeaning ablation inflates both (11\%, 90\%). \\
+\hline
+Claim evaluation & 480 evaluations. Determinism 480/480; 0 statements that a claim is true or false; 0 monotonicity failures as the stake rises; 0 degradation failures with no sources or no stake. \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Explanation faithfulness.} For the compliance module, severity was recomputed from the published explanation fields alone by an independently written function over 444 sampled flags: 100\% agreement. A safety lint over 8{,}193 generated strings found 0 phrases asserting a legal obligation, and every flag carried its professional referral. Output is byte-identical on re-run and a full evaluation takes 2.3~ms at the median (p95 2.6~ms) over an 18-month ledger of 327 transactions.
+
+\textbf{Constants set by measurement, not assertion.} The compliance module's emission bands were fixed by a selection rule declared before the results were seen: keep the most permissive setting whose false-alarm rate is at most 10\%, else the most conservative in the grid. No speculative ``watch'' setting met the bar --- 15.6\% false alarms with the band off, 32--43\% with it on --- so that band and the early-ledger flag ship switched off, and only the projection band, which met the bar, is active. Reporting a feature as disabled by its own evaluation is the point of the exercise: the alternative is an unmeasured constant presented as a result.
+
+\textbf{Where the methods are weak.} The compliance module's predicted crossing interval contained the true crossing date only 48.7\% of the time (23.0\% when fewer than three complete months of history force a fixed fallback band), so it is reported as a range, not a confidence interval. Its tax-year rules false-alarm at 31--57\% because semester tuition is lumpy and the pace model is linear. Goal forecasting is beaten by a 7-day-window baseline on every profile where behaviour changes. The vulnerability index buys only days of warning, not weeks, and at thresholds low enough to catch a quarter of cases it flags a fifth of healthy users. These are the measurements, not a selection of them.
+
+\subsection{Remaining Planned Evaluation}
+
+The harnesses above establish behaviour under synthetic dynamics; they do not establish calibration against real outcomes, and two measures in Table~\ref{tab:futuremetrics} cannot be obtained without human participants.
+
+\begin{table}[!t]
+\centering
+\caption{Remaining Planned Measures (Not Yet Obtained)}
 \label{tab:futuremetrics}
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
@@ -495,7 +552,7 @@ Reliability & Automated test pass rate against a provisioned database \\
 \hline
 Explainability & User comprehension and trust instruments comparing factor-annotated against bare-score presentation \\
 \hline
-Goal forecasting & Forecast error and goal-attainment prediction accuracy, once implemented \\
+Comprehension and non-authority & Whether users can state which transactions produced a flag, and whether they correctly answer that the system does not know the law in their country; requires 15--20 participants \\
 \hline
 Score calibration & Agreement between the Clarity Score and realized financial outcomes across a diverse user sample \\
 \hline
@@ -526,7 +583,7 @@ Risk analysis & Reactive & Present but opaque & Proactive, factor-based \\
 \hline
 Factor traceability & No & Limited & Yes, by construction \\
 \hline
-Goal forecasting & Limited & Varies & Planned, same constraint \\
+Goal forecasting & Limited & Varies & Implemented, same constraint \\
 \hline
 Conversational assistance & Rare & Possible & Implemented, grounded and bounded \\
 \hline
@@ -545,11 +602,11 @@ The claims above are subject to the following limitations.
 
 \emph{Dataset scale.} The demonstrated evaluation rests on a seeded dataset of seven transactions across six categories. This is adequate to establish that the pipeline functions and inadequate for any inference about behaviour at realistic data volumes.
 
-\emph{Uncalibrated scoring parameters.} The penalty constants in (4) through (6) are design choices, not empirically derived weights. No study has yet established that a score of, say, 70 corresponds to a materially different real-world financial outcome than a score of 60. A structural consequence of the current weights is that the three penalties sum to at most 90, so the attainable score range is effectively $[10, 100]$ rather than the nominal $[0, 100]$; the lower clamp is defensive and cannot be reached with the current weights. Calibration against realized outcomes is required before the score should be treated as a measure rather than an indicator.
+\emph{Uncalibrated scoring parameters.} The penalty constants in (4) through (6) are design choices, not empirically derived weights. No study has yet established that a score of, say, 70 corresponds to a materially different real-world financial outcome than a score of 60. A structural consequence of the current weights is that the three penalties sum to at most 90, so the attainable score range is effectively $[10, 100]$ rather than the nominal $[0, 100]$; the lower clamp is defensive and never reached. Calibration against realized outcomes is required before the score should be treated as a measure rather than an indicator.
 
 \emph{Linearity of the projection.} Month-end projection is a linear extrapolation of mean daily spend. It does not model weekly periodicity, recurring fixed obligations, or known future commitments, and it will systematically misestimate for users whose expenditure is unevenly distributed within the month. The seven-day warm-up guard mitigates the most severe early-month distortions but does not address this.
 
-\emph{Goal forecasting is absent.} It is a stated objective of the project and remains unimplemented.
+\emph{Every reported measurement is synthetic.} The cohorts in Table~\ref{tab:measured} are generated by the same authors who wrote the detectors, so the noise model is an assumption about real spending rather than an observation of it. The harnesses establish behaviour under known dynamics and reproducibility from a seed; they do not establish accuracy for real users, and no figure in this paper should be read as the latter. Two further limits follow from the measurements themselves: goal forecasting is beaten by a short-window baseline whenever a user's saving behaviour changes, and the compliance module's crossing intervals are too narrow to be read as confidence intervals. Its assumed figures are unverified placeholders in every jurisdiction, which is why the module states them as assumptions, makes them editable, reports sensitivity to them, and refers every flag to a qualified professional.
 
 \emph{The live language-model path is unvalidated.} The Gemini call path is implemented and defensively wrapped, but has not been exercised against a live API key. Its behaviour in production is therefore unverified, and only the deterministic reply path can presently be described as tested.
 
@@ -564,14 +621,14 @@ The claims above are subject to the following limitations.
 The following directions address the limitations above.
 
 \begin{enumerate}
-\item \textbf{Explainable goal forecasting.} Implement goal projection against the observed spend trend, subject to the same construction-time constraint applied to the Clarity Score: a goal projection must emit the factors that produced it or must not be displayed.
+\item \textbf{Real-user validation of the predictive modules.} Replace the synthetic cohorts with anonymised real ledgers and re-run the same harnesses unchanged, re-fitting the emission bands on that data; the compliance module already records first-flagged and first-crossed dates per rule so real-user lead time can be computed directly. A short-window pace model should be evaluated alongside the shipped average-pace model for goal forecasting, since the synthetic evaluation already favours it whenever behaviour shifts.
 \item \textbf{Validation of the language-model path.} Exercise the live Gemini path against a real key, and add adversarial tests confirming that the model cannot introduce a financial figure absent from the grounding context.
 \item \textbf{Empirical calibration of the Clarity Score.} Fit the penalty constants against realized financial outcomes across a diverse user sample, and revisit the effective score range noted in Section X.
 \item \textbf{Richer projection models.} Extend beyond linear extrapolation to account for intra-month periodicity and known recurring obligations, retaining decomposability into named factors.
 \item \textbf{User studies on explainability and trust.} Compare factor-annotated against bare-score presentation on comprehension, trust, and acted-upon recommendations. The structural claim of this paper does not supply this evaluation.
 \item \textbf{Larger real and synthetic datasets.} Establish behaviour at realistic transaction volumes and across varied spending profiles.
 \item \textbf{Security hardening.} Add token refresh and revocation, secure client-side token storage, brute-force protection, and a shared-store rate limiter suitable for multi-worker deployment.
-\item \textbf{Price observation history.} Accumulate longitudinal price observations so that trends can be computed rather than withheld.
+\item \textbf{Price observation history.} Accumulate longitudinal price observations so that trends can be computed.
 \item \textbf{Advanced financial risk modelling.} Introduce additional risk axes such as income volatility, obligation coverage, and liquidity buffer, each admitted only if it can be expressed as a named, auditable factor.
 \item \textbf{Bounded learned components.} Where pattern discovery is required, investigate learned models whose outputs are decomposed into named factors before display, so that the explainability constraint still applies.
 \end{enumerate}
@@ -582,7 +639,7 @@ Personal financial management applications are abundant, but most remain systems
 
 This paper has presented MEIKA, an explainable AI-based personal financial copilot designed around explainability as an architectural constraint. The system computes spending velocity and month-end projection directly from live transaction data, combines them with a category-concentration measure into a deterministic Financial Clarity Score, and emits every contributing factor as a named \texttt{XAIFactor} object in the same response as the score. The penalty and its explanation are built in one operation from the same quantities, so the explanation states the computation exactly, and a score cannot be displayed without its reasoning. The system is realized as a Flutter client over a layered FastAPI backend and a tenant-isolated PostgreSQL schema, with a language-model layer bounded to rephrasing figures the deterministic layer has already computed.
 
-The contribution is limited in scope. At the Phase-I review the prototype demonstrated three tested REST modules producing a Clarity Score of 91 out of 100 with three live factors over a seven-transaction dataset, and the implementation has since gained a grounded conversational copilot, a price-comparison module, authentication, and multi-currency display. This shows the approach can be built. It does not show the approach is calibrated: the scoring parameters remain empirically unvalidated, goal forecasting is not yet implemented, and no user study has tested whether users find the guaranteed explanations useful. The next phase of the work addresses those questions. What this paper establishes is that a financial decision-support system can be built so that no figure reaches the user without its justification, and it argues that this property should be designed in from the start.
+The contribution is limited in scope. At the Phase-I review the prototype demonstrated three tested REST modules producing a Clarity Score of 91 out of 100 with three live factors over a seven-transaction dataset, and the implementation has since gained a grounded conversational copilot, a price-comparison module, authentication, multi-currency display, explainable goal forecasting, and five predictive modules each shipped with a reproducible evaluation harness. This shows the approach can be built, and that its outputs can be measured rather than asserted: one emission band was switched off because its own evaluation could not clear a false-alarm target fixed in advance. It does not show the approach is calibrated for real users: every cohort reported here is synthetic, the scoring parameters remain empirically unvalidated, and no user study has tested whether people find the guaranteed explanations useful, or whether they correctly understand that the system does not know the law in their country. The next phase of the work addresses those questions. What this paper establishes is that a financial decision-support system can be built so that no figure reaches the user without its justification, and it argues that this property should be designed in from the start.
 
 % ---------------------------------------------------------------
 % REFERENCES -- IEEE numbered style, matches citation keys above

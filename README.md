@@ -71,8 +71,10 @@ emulator vs. iOS simulator vs. physical device).
 
 - [x] **Phase 1** — Project scaffold: FastAPI backend structure, Postgres Docker
       Compose, Flutter frontend init.
-- [ ] Phase 2 — Database schema, SQLAlchemy models, Alembic migrations (with
+- [x] Phase 2 — Database schema, SQLAlchemy models, Alembic migrations (with
       tenant-scoped `user_id` on every owned table from the first revision).
+      Eight hand-written migrations; `alembic upgrade head` builds the schema
+      from empty and each revision downgrades cleanly.
 - [x] Phase 3 — Core backend logic: Price-Finder / True Economic Cost engine,
       spending velocity, Financial Clarity Score.
   - [x] Spending velocity, predictive month-end projection, and an
