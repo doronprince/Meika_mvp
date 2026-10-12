@@ -1,0 +1,77 @@
+name: Deploy web app to GitHub Pages
+
+# Publishes the Flutter web build to GitHub Pages. The API it talks to is
+# NOT hosted here — Pages serves static files only — so the build needs two
+# repository variables pointing at the deployed backend:
+#   Settings > Secrets and variables > Actions > Variables
+#     MEIKA_API_BASE_URL  https://<your-api>.onrender.com/api/v1
+#     MEIKA_WS_BASE_URL   wss://<your-api>.onrender.com/ws
+# See DEPLOY.md.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Check the build is sound
+        working-directory: frontend
+        run: |
+          flutter analyze lib test
+          flutter test
+
+      - name: Build web
+        working-directory: frontend
+        env:
+          API_BASE_URL: ${{ vars.MEIKA_API_BASE_URL }}
+          WS_BASE_URL: ${{ vars.MEIKA_WS_BASE_URL }}
+        run: |
+          if [ -z "$API_BASE_URL" ] || [ -z "$WS_BASE_URL" ]; then
+            echo "::error::Set the repository variables MEIKA_API_BASE_URL and MEIKA_WS_BASE_URL first (see DEPLOY.md)."
+            exit 1
+          fi
+          # Pages serves the site under /<repo>/, so the build needs that base href.
+          flutter build web --release \
+            --base-href "/${GITHUB_REPOSITORY#*/}/" \
+            --dart-define=MEIKA_API_BASE_URL="$API_BASE_URL" \
+            --dart-define=MEIKA_WS_BASE_URL="$WS_BASE_URL"
+          # Pages has no server-side routing; serve the app for unknown paths too.
+          cp build/web/index.html build/web/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

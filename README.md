@@ -26,6 +26,15 @@ Meika_mvp/
   recommendation ships with the computed factors behind it, never a bare directive.
 - **Communication:** REST JSON (`/api/v1/...`) + WebSocket (`/ws/...` for the copilot chat).
 
+## Running it online
+
+The web app is published to GitHub Pages by
+[`.github/workflows/deploy-web.yml`](.github/workflows/deploy-web.yml). Pages
+serves static files only, so the API and database live elsewhere: the
+FastAPI service on Render ([`render.yaml`](render.yaml)) and PostgreSQL on
+Neon. Step-by-step instructions, including the two repository variables the
+web build needs, are in [DEPLOY.md](DEPLOY.md).
+
 ## Quickstart
 
 ### Backend + Postgres (Docker)

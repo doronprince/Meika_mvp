@@ -1,0 +1,40 @@
+# Render blueprint for the Meika API. The database is NOT defined here on
+# purpose: Render's free PostgreSQL expires after 30 days, so the API points
+# at a Neon database instead (free, no expiry) through DATABASE_URL.
+#
+# See DEPLOY.md for the click-by-click steps. Values marked `sync: false`
+# are set once in the Render dashboard and never committed.
+services:
+  - type: web
+    name: meika-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    # Closest free region to Korea/India; change if you are elsewhere.
+    region: singapore
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      # Neon connection string. Either scheme works: the app normalises it
+      # for asyncpg and enables SSL (see app/core/config.py).
+      - key: DATABASE_URL
+        sync: false
+      # The GitHub Pages origin, e.g. https://doronprince.github.io
+      # Comma-separated; no trailing slash.
+      - key: CORS_ORIGINS
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ENV
+        value: production
+      # Demo accounts for evaluators. Set to "false" to run registration-only.
+      - key: SEED_DEMO_DATA
+        value: "true"
+      # Optional. Empty means Price-Finder uses the seeded catalog and
+      # claim-check reports that no evidence could be retrieved.
+      - key: SERPAPI_API_KEY
+        sync: false
+      # Optional. Empty means the Copilot uses its deterministic replies.
+      - key: GEMINI_API_KEY
+        sync: false

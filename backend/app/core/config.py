@@ -1,6 +1,38 @@
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# libpq spellings that mean "use TLS". asyncpg doesn't understand any of
+# them: it takes an `ssl` connect argument instead, so they are stripped
+# from the URL here and turned into that flag (see app/db/session.py).
+_TLS_SSLMODES = {"require", "verify-ca", "verify-full"}
+_LIBPQ_ONLY_PARAMS = {"channel_binding", "sslmode", "ssl"}
+
+
+def normalize_database_url(raw: str) -> tuple[str, bool]:
+    """A hosted provider hands out a libpq URL (`postgresql://...?sslmode=require`,
+    and Neon adds `channel_binding`). Return it as an asyncpg URL plus whether
+    TLS was asked for. Without this the app boots locally and dies in
+    production on `connect() got an unexpected keyword argument 'sslmode'`."""
+    parts = urlsplit(raw)
+    scheme = parts.scheme
+    if scheme in ("postgres", "postgresql"):
+        scheme = "postgresql+asyncpg"
+
+    requires_tls = False
+    kept: list[tuple[str, str]] = []
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        if key == "sslmode":
+            requires_tls = value in _TLS_SSLMODES
+        elif key == "ssl":
+            requires_tls = value.lower() in {"1", "true", "require", "verify-ca", "verify-full"}
+        elif key in _LIBPQ_ONLY_PARAMS:
+            continue
+        else:
+            kept.append((key, value))
+    return urlunsplit((scheme, parts.netloc, parts.path, urlencode(kept), parts.fragment)), requires_tls
 
 
 class Settings(BaseSettings):
@@ -51,11 +83,17 @@ class Settings(BaseSettings):
     @property
     def sqlalchemy_database_url(self) -> str:
         if self.database_url:
-            return self.database_url
+            return normalize_database_url(self.database_url)[0]
         return (
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
+
+    @property
+    def database_requires_tls(self) -> bool:
+        """True when the configured URL asked for TLS, as every hosted
+        Postgres does and a local docker-compose one does not."""
+        return bool(self.database_url) and normalize_database_url(self.database_url)[1]
 
     @property
     def cors_origins_list(self) -> list[str]:

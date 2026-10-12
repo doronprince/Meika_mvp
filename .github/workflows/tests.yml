@@ -1,0 +1,77 @@
+name: Tests
+
+# The backend's database tests skip themselves when Postgres is absent, so
+# CI provisions a real one: without it a green run would prove very little.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: meika
+          POSTGRES_PASSWORD: meika
+          POSTGRES_DB: meika
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U meika"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://meika:meika@localhost:5432/meika
+      JWT_SECRET_KEY: ci-only-not-a-real-secret
+      # Never spend the live search quota from CI.
+      SERPAPI_API_KEY: ""
+      GEMINI_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Apply migrations
+        working-directory: backend
+        run: alembic upgrade head
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest -q
+
+      - name: Migrations reverse cleanly
+        working-directory: backend
+        run: |
+          alembic downgrade base
+          alembic upgrade head
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.8
+          channel: stable
+          cache: true
+      - working-directory: frontend
+        run: flutter pub get
+      - working-directory: frontend
+        run: flutter analyze lib test
+      - working-directory: frontend
+        run: flutter test
