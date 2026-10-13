@@ -9,6 +9,15 @@ from app.core.config import settings
 # app/core/config.py).
 _connect_args: dict = {"ssl": True} if settings.database_requires_tls else {}
 
+# A pooled host (Neon's `-pooler`, Supabase's pgbouncer port, and friends)
+# runs PgBouncer in transaction mode, which cannot carry asyncpg's prepared
+# statements between statements — left on, queries fail intermittently with
+# "prepared statement _pg_N does not exist". Both caches go off for pooled
+# hosts only, so a direct connection keeps the faster path.
+if "-pooler" in settings.sqlalchemy_database_url or "pgbouncer=true" in settings.sqlalchemy_database_url:
+    _connect_args["statement_cache_size"] = 0
+    _connect_args["prepared_statement_cache_size"] = 0
+
 engine = create_async_engine(
     settings.sqlalchemy_database_url,
     pool_pre_ping=True,

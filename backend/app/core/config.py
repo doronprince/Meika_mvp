@@ -63,7 +63,10 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,http://localhost:8080"
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    # gemini-2.0-flash was retired by Google (404 "no longer available").
+    # gemini-2.5-flash is generally available; the "-latest" aliases point at
+    # preview models that return 503 under load.
+    gemini_model: str = "gemini-2.5-flash"
 
     # Live Price-Finder search (Google Shopping via SerpApi). Empty by
     # default — search falls back to the seeded demo catalog until a real

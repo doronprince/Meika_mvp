@@ -24,7 +24,21 @@ Budget about 20 minutes.
    `postgresql://user:password@ep-something.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
 3. Keep it for step 2. The app rewrites it for asyncpg and enables TLS by
    itself (`normalize_database_url` in `backend/app/core/config.py`), so
-   paste it exactly as Neon gives it.
+   paste it exactly as Neon gives it — `sslmode`, `channel_binding` and all.
+   A pooled host (the `-pooler` one Neon shows by default) also works: the
+   app turns off asyncpg's statement caches for pooled hosts, without which
+   PgBouncer makes queries fail intermittently with "prepared statement does
+   not exist".
+
+The schema is created on first boot by `start.sh`, so there is nothing to
+run by hand. To prepare the database before deploying, point the backend at
+it locally instead:
+
+```bash
+cd backend
+DATABASE_URL="<your Neon string>" .venv/Scripts/python -m alembic upgrade head
+DATABASE_URL="<your Neon string>" .venv/Scripts/python -m scripts.seed_dev_user
+```
 
 ## 2. API: Render (10 minutes)
 
@@ -91,6 +105,13 @@ modules), Copilot.
 - **With no `GEMINI_API_KEY`** the Copilot answers from its deterministic
   path, which is grounded in the same computed numbers. Tax questions always
   take that path by design.
+- **`GEMINI_MODEL` must name a model your key can serve.** Google retires
+  them: `gemini-2.0-flash` now returns 404 "no longer available". The
+  default is `gemini-2.5-flash`, which was generally available when this was
+  written. The `-latest` aliases point at preview models that returned 503
+  under load in testing. On the free tier expect the occasional 503 or a 429
+  quota error; the copilot logs it and answers deterministically instead, so
+  a demo never breaks on it.
 - **Rate limiting is per process** (60 requests/minute, 10 for auth). Fine
   for one free instance; it would need Redis before scaling out.
 

@@ -29,3 +29,11 @@ def _fresh_rate_limit_buckets():
     The limiter's own test still trips it deliberately within one test."""
     reset_rate_limits()
     yield
+
+
+@pytest.fixture(autouse=True)
+def _disable_live_gemini(monkeypatch):
+    """A real GEMINI_API_KEY in .env would otherwise send every copilot test
+    to Google: slow, quota-spending, and non-deterministic. Tests that want
+    the Gemini path set the key themselves."""
+    monkeypatch.setattr(settings, "gemini_api_key", "")
