@@ -11,7 +11,7 @@ Budget about 20 minutes.
 
 ```
    Browser ──► GitHub Pages (Flutter web)  ──HTTPS──►  Render (FastAPI)  ──►  Neon (PostgreSQL)
-               doronprince.github.io/Meika_mvp/        meika-api.onrender.com
+               doronlintonprince.me/Meika_mvp/         meika-api.onrender.com
 ```
 
 ---
@@ -50,7 +50,7 @@ DATABASE_URL="<your Neon string>" .venv/Scripts/python -m scripts.seed_dev_user
    | Variable | Value |
    |---|---|
    | `DATABASE_URL` | the Neon string from step 1 |
-   | `CORS_ORIGINS` | `https://doronprince.github.io` (no trailing slash) |
+   | `CORS_ORIGINS` | `https://doronlintonprince.me` (no trailing slash) |
    | `SERPAPI_API_KEY` | your key, or leave empty |
    | `GEMINI_API_KEY` | your key, or leave empty |
 
@@ -64,7 +64,8 @@ DATABASE_URL="<your Neon string>" .venv/Scripts/python -m scripts.seed_dev_user
 
 ## 3. Web app: GitHub Pages (5 minutes)
 
-1. Repo **Settings → Pages → Source: GitHub Actions**.
+1. Pages is already enabled for this repo with Source: GitHub Actions,
+   and HTTPS is enforced. Nothing to do unless you reset it.
 2. Repo **Settings → Secrets and variables → Actions → Variables → New**:
 
    | Variable | Value |
@@ -76,7 +77,7 @@ DATABASE_URL="<your Neon string>" .venv/Scripts/python -m scripts.seed_dev_user
    `http`/`ws` calls, and the app will look broken with only a console error.
 3. **Actions → Deploy web app to GitHub Pages → Run workflow** (it also runs
    on every push to `master`).
-4. Open `https://doronprince.github.io/Meika_mvp/` on any device.
+4. Open `https://doronlintonprince.me/Meika_mvp/` on any device.
 
 ## 4. Check it end to end
 
@@ -95,7 +96,9 @@ modules), Copilot.
 - **First request after a pause takes ~50 seconds.** Render's free service
   sleeps when idle. Open the site a minute before a demo, or keep the tab open.
 - **CORS must match exactly.** `CORS_ORIGINS` is the origin only —
-  `https://doronprince.github.io` — not the full path to the app.
+  `https://doronlintonprince.me` — not the full path to the app. This
+  account serves Pages from a custom domain, so it is NOT
+  `doronprince.github.io`; HTTPS is enforced on it.
 - **Demo passwords are public** once the site is. Don't reuse them anywhere,
   and set `SEED_DEMO_DATA=false` if that bothers you.
 - **The free search quota is shared.** SerpApi's free tier is 100 searches a
