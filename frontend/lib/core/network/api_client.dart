@@ -8,7 +8,10 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 15),
+      // A free hosted instance sleeps when idle and takes ~30-60s to wake,
+      // so the first request after a pause must be allowed to wait for it.
+      // At 15s every cold start showed up as "couldn't reach the backend".
+      connectTimeout: const Duration(seconds: 90),
       // Price-Finder's live search can wait up to 20s on SerpApi
       // (live_price_service.py) before falling back to the seed catalog —
       // this must stay comfortably above that or a slow-but-successful

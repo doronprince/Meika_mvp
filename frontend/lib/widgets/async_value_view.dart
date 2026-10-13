@@ -40,6 +40,16 @@ class AsyncValueView<T> extends StatelessWidget {
                     .bodySmall
                     ?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.6)),
               ),
+              const SizedBox(height: 8),
+              Text(
+                'The demo server sleeps when nobody is using it and takes about a minute to wake. '
+                'If this is the first request in a while, give it a moment and retry.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: ZenColors.sumi.withValues(alpha: 0.5)),
+              ),
               if (onRetry != null) ...[
                 const SizedBox(height: 16),
                 OutlinedButton(onPressed: onRetry, child: const Text('Retry')),

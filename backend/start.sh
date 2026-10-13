@@ -15,12 +15,10 @@ alembic upgrade head
 
 if [ "$SEED_DEMO_DATA" = "true" ]; then
   echo "==> seeding demo data"
-  python -m scripts.seed_dev_user
+  # One account that exercises every feature, rather than the three
+  # feature-specific ones the local scripts still create.
+  python -m scripts.seed_demo
   python -m scripts.seed_catalog
-  python -m scripts.seed_tax_demo
-  # The research demo covers survival runway and digital exposure, which
-  # have nothing to show until income and exposure sessions exist.
-  python -m scripts.seed_research_demo || echo "    (research demo seed unavailable, continuing)"
 fi
 
 echo "==> starting uvicorn on port ${PORT:-8000}"

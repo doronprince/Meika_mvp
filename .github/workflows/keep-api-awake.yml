@@ -1,0 +1,29 @@
+name: Keep the API awake
+
+# The API runs on a free Render instance, which sleeps after ~15 minutes
+# idle and then takes about half a minute to wake. A visitor who lands on a
+# sleeping instance waits through that, so this pings it often enough to
+# keep it up. GitHub's schedule is best-effort and can run late, which is
+# fine: the cost of a missed ping is one slow first request.
+#
+# Turn it off from the Actions tab if the service moves to a paid plan or
+# the demo is over.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health
+        run: |
+          code=$(curl -s -m 120 -o /tmp/health.json -w "%{http_code}" \
+            https://meika-api.onrender.com/api/v1/health || echo "000")
+          echo "HTTP $code"
+          cat /tmp/health.json || true
+          # A sleeping instance that wakes is a success; only a real failure
+          # should fail the job.
+          [ "$code" = "200" ]
