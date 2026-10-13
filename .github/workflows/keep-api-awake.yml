@@ -1,17 +1,17 @@
 name: Keep the API awake
 
-# The API runs on a free Render instance, which sleeps after ~15 minutes
-# idle and then takes about half a minute to wake. A visitor who lands on a
-# sleeping instance waits through that, so this pings it often enough to
-# keep it up. GitHub's schedule is best-effort and can run late, which is
-# fine: the cost of a missed ping is one slow first request.
+# Two free tiers sleep underneath this app: the Render instance (~15 min
+# idle, ~30s to wake) and the Neon database (~5 min idle). The health
+# endpoint touches both, so pinging it every 5 minutes keeps the pair warm.
+# GitHub's schedule is best-effort and can run late, which is fine: the
+# cost of a missed ping is one slow first request.
 #
 # Turn it off from the Actions tab if the service moves to a paid plan or
 # the demo is over.
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

@@ -23,7 +23,10 @@ engine = create_async_engine(
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=5,
-    pool_recycle=300,
+    # Neon's free tier suspends the database after ~5 minutes idle, which
+    # leaves pooled connections stale; recycling faster than that (with
+    # pre-ping above) keeps a woken request from meeting a dead socket.
+    pool_recycle=120,
     connect_args=_connect_args,
 )
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
