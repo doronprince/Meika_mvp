@@ -26,6 +26,23 @@ Meika_mvp/
   recommendation ships with the computed factors behind it, never a bare directive.
 - **Communication:** REST JSON (`/api/v1/...`) + WebSocket (`/ws/...` for the copilot chat).
 
+## Live
+
+| | |
+|---|---|
+| App | https://doronlintonprince.me/Meika_mvp/ |
+| API | https://meika-api.onrender.com (docs at `/docs`, health at `/api/v1/health`) |
+
+Sign in with a demo account or register your own:
+
+- `dev@meika.example` / `MeikaDemo123!` — dashboard, budget, goals, Price-Finder
+- `tax@meika.example` / `MeikaTax123!` — 14 months of history, so Foresight has flags to show
+- `research@meika.example` / `MeikaDemo123!` — income, savings and screen-time sessions for survival runway and exposure
+
+The API is on Render's free plan and sleeps when idle, so the first request
+after a pause takes roughly a minute. Those demo passwords are public;
+treat the accounts as throwaway.
+
 ## Running it online
 
 The web app is published to GitHub Pages by
