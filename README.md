@@ -33,11 +33,15 @@ Meika_mvp/
 | App | https://doronlintonprince.me/Meika_mvp/ |
 | API | https://meika-api.onrender.com (docs at `/docs`, health at `/api/v1/health`) |
 
-Sign in with a demo account or register your own:
+Sign in with the demo account, or register your own:
 
-- `dev@meika.example` / `MeikaDemo123!` — dashboard, budget, goals, Price-Finder
-- `tax@meika.example` / `MeikaTax123!` — 14 months of history, so Foresight has flags to show
-- `research@meika.example` / `MeikaDemo123!` — income, savings and screen-time sessions for survival runway and exposure
+**`demo@meika.example` / `MeikaDemo123!`**
+
+One account covering every feature: 14 months of expenses (including this
+month), receipts on some of them, a savings goal and a spending cap, income
+and savings for the survival runway, and screen-time sessions for the
+exposure module. A freshly registered account starts empty instead, and the
+history-hungry modules will say so rather than invent anything.
 
 The API is on Render's free plan and sleeps when idle, so the first request
 after a pause takes roughly a minute. Those demo passwords are public;

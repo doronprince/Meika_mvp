@@ -81,10 +81,10 @@ DATABASE_URL="<your Neon string>" .venv/Scripts/python -m scripts.seed_dev_user
 
 ## 4. Check it end to end
 
-Sign in with a demo account, or register a fresh one:
+Sign in with the demo account, or register a fresh one:
 
-- `dev@meika.example` / `MeikaDemo123!` — dashboard, budget, goals, Price-Finder
-- `tax@meika.example` / `MeikaTax123!` — 14 months of history, so Foresight has flags to show
+- `demo@meika.example` / `MeikaDemo123!` — one account with data for every
+  feature (`scripts/seed_demo.py`, run on boot when `SEED_DEMO_DATA=true`)
 
 Walk the tabs: Dashboard, Price-Finder, Budget, Goals, Foresight (five
 modules), Copilot.
@@ -93,8 +93,11 @@ modules), Copilot.
 
 ## Things that will bite you
 
-- **First request after a pause takes ~50 seconds.** Render's free service
-  sleeps when idle. Open the site a minute before a demo, or keep the tab open.
+- **First request after a pause takes ~30-60 seconds.** Render's free service
+  sleeps when idle. The client waits up to 90s for it (at 15s every cold
+  start looked like an outage), and `.github/workflows/keep-api-awake.yml`
+  pings health every 10 minutes to keep it up. GitHub's schedule is
+  best-effort, so open the site a minute before a demo anyway.
 - **CORS must match exactly.** `CORS_ORIGINS` is the origin only —
   `https://doronlintonprince.me` — not the full path to the app. This
   account serves Pages from a custom domain, so it is NOT
